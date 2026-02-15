@@ -1,0 +1,31 @@
+{
+  "name": "composited_traj",
+  "description": "Trajectory combining orbit_left and pull_out",
+  "mode": "relative",
+  "num_frames": 81,
+  "zoom_ratio": 1.0,
+  "use_first_frame": true,
+  "keyframes": [
+    {
+      "0": [
+        {
+          "static": {}
+        }
+      ]
+    },
+    {
+      "40": [
+        {
+          "orbit_left": {"orbit_radius": 1.0, "angle": 10}
+        }
+      ]
+    },
+    {
+      "80": [
+        {
+          "pull_out": {"distance": 0.3}
+        }
+      ]
+    }
+  ]
+}

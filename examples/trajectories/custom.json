@@ -1,0 +1,11 @@
+{
+  "name": "custom_traj",
+  "description": "Custom trajectory loaded from npz file",
+  "mode": "relative",
+  "num_frames": 81,
+  "zoom_ratio": 1.0,
+  "use_first_frame": true,
+  "trajectory": {
+    "file": "examples/trajectories/custom.npz"
+  }
+}

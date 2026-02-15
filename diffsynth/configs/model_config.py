@@ -73,7 +73,7 @@ from ..models.flux_lora_encoder import FluxLoRAEncoder
 from ..models.nexus_gen_projector import NexusGenAdapter, NexusGenImageEmbeddingMerger
 from ..models.nexus_gen import NexusGenAutoregressiveModel
 
-from ..auxiliary_models import WorldMirror
+from ..auxiliary_models import WorldMirror, DepthAnything3Reconstructor
 
 model_loader_configs = [
     # These configs are provided for detecting model type automatically.
@@ -165,6 +165,7 @@ model_loader_configs = [
     (None, "2bd19e845116e4f875a0a048e27fc219", ["nexus_gen_llm"], [NexusGenAutoregressiveModel], "civitai"),
     (None, "bf3f0d73cebc1e54d753a8fa2e7dce96", ["wan_video_dit", "wan_video_neoverse_controller"], [WanModel, NeoVerseControlBranch], "civitai"),
     (None, "1a1d001a35f78f3a7796a1e719ead340", ["reconstructor"], [WorldMirror], "civitai"),
+    (None, "252f1c3923a62665aee9b32f1b18afb5", ["reconstructor"], [DepthAnything3Reconstructor], "civitai"),
 ]
 huggingface_model_loader_configs = [
     # These configs are provided for detecting model type automatically.

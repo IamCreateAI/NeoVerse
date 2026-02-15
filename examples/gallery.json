@@ -1,0 +1,75 @@
+[
+  {
+    "file": "examples/videos/driving.mp4",
+    "name": "Complex Trajectory",
+    "scene_type": "General scene",
+    "traj_file": "examples/trajectories/custom.json"
+  },
+  {
+    "file": "examples/videos/driving2.mp4",
+    "name": "Pan Left and Pan Right",
+    "scene_type": "General scene",
+    "traj_file": "examples/trajectories/sparse_matrices.json"
+  },
+  {
+    "file": "examples/videos/movie.mp4",
+    "name": "Orbit Left and Pull Out",
+    "scene_type": "General scene",
+    "mode": "relative",
+    "traj_file": "examples/trajectories/orbit_left_pull_out.json",
+    "alpha_threshold": 0.95
+  },
+  {
+    "file": "examples/videos/animal.mp4",
+    "name": "Zoom In",
+    "scene_type": "General scene",
+    "camera_motion": "static",
+    "angle": 0,
+    "distance": 0,
+    "orbit_radius": 0,
+    "mode": "relative",
+    "zoom_ratio": 2.0,
+    "alpha_threshold": 1.0,
+    "use_first_frame": true
+  },
+  {
+    "file": "examples/videos/robot.mp4",
+    "name": "Tilt Up",
+    "scene_type": "General scene",
+    "camera_motion": "tilt_up",
+    "angle": 15,
+    "distance": 0,
+    "orbit_radius": 0,
+    "mode": "relative",
+    "zoom_ratio": 1.0,
+    "alpha_threshold": 1.0,
+    "use_first_frame": true
+  },
+  {
+    "file": "examples/videos/tree_and_building.mp4",
+    "name": "Move Right",
+    "scene_type": "General scene",
+    "camera_motion": "move_right",
+    "angle": 0,
+    "distance": 0.2,
+    "orbit_radius": 0,
+    "mode": "global",
+    "zoom_ratio": 1.0,
+    "alpha_threshold": 1.0,
+    "use_first_frame": true
+  },
+  {
+    "file": "examples/videos/room.png",
+    "name": "Complex Trajectory",
+    "scene_type": "Static scene",
+    "mode": "relative",
+    "traj_file": "examples/trajectories/custom2.json"
+  },
+  {
+    "file": "examples/videos/jungle.png",
+    "name": "Complex Trajectory",
+    "scene_type": "Static scene",
+    "mode": "relative",
+    "traj_file": "examples/trajectories/custom2.json"
+  }
+]

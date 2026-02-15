@@ -1,0 +1,58 @@
+{
+  "name": "custom_traj_2",
+  "description": "Trajectory combining pull_out, push_in, tilt_up and panning",
+  "mode": "relative",
+  "num_frames": 81,
+  "zoom_ratio": 1.0,
+  "use_first_frame": true,
+  "keyframes": [
+    {
+      "0": [
+        {
+          "static": {}
+        }
+      ]
+    },
+    {
+      "30": [
+        {
+          "pull_out": {"distance": 0.3}
+        }
+      ]
+    },
+    {
+      "40": [
+        {
+          "push_in": {"distance": 0.1}
+        }
+      ]
+    },
+    {
+      "60": [
+        {
+          "pull_out": {"distance": 0.2}
+        },
+        {
+          "tilt_up": {"angle": 15}
+        }
+      ]
+    },
+    {
+      "70": [
+        {
+          "tilt_down": {"angle": 15}
+        },
+        {
+          "pan_left": {"angle": 25}
+        }
+      ]
+    },
+    {
+      "80": [
+        {
+          "pan_right": {"angle": 30}
+        }
+      ]
+    }
+  ]
+}

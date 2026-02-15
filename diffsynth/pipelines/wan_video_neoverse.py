@@ -84,7 +84,7 @@ class WanVideoNeoVersePipeline(BasePipeline):
         inputs["latents"] = self.scheduler.add_noise(inputs["input_latents"], inputs["noise"], timestep)
         training_target = self.scheduler.training_target(inputs["input_latents"], inputs["noise"], timestep)
 
-        with torch.cuda.amp.autocast(dtype=self.torch_dtype):
+        with torch.amp.autocast("cuda", dtype=self.torch_dtype):
             noise_pred = self.model_fn(**inputs, timestep=timestep)
 
         loss = torch.nn.functional.mse_loss(noise_pred.float(), training_target.float())
@@ -236,16 +236,25 @@ class WanVideoNeoVersePipeline(BasePipeline):
 
     @staticmethod
     def from_pretrained(
-        torch_dtype: torch.dtype = torch.bfloat16,
-        device: Union[str, torch.device] = "cuda",
-        model_configs: list[ModelConfig] = [],
-        tokenizer_config: ModelConfig = ModelConfig(model_id="Wan-AI/Wan2.1-T2V-1.3B", origin_file_pattern="google/*"),
+        local_model_path: str = "models",
+        reconstructor_path: str = "models/NeoVerse/reconstructor.ckpt",
         pipeline_kwargs: dict = {},
+        lora_path: Optional[str] = None,
+        lora_alpha: float = 1.0,
+        device: Union[str, torch.device] = "cpu",
+        torch_dtype: torch.dtype = torch.bfloat16,
     ):
         # Initialize pipeline
         pipe = WanVideoNeoVersePipeline(device=device, torch_dtype=torch_dtype, pipeline_kwargs=pipeline_kwargs)
 
-        # Download and load models
+        # Load models
+        model_configs = [
+            ModelConfig(path=reconstructor_path),
+            ModelConfig(local_model_path=local_model_path, model_id="NeoVerse", origin_file_pattern="diffusion_pytorch_model*.safetensors"),
+            ModelConfig(local_model_path=local_model_path, model_id="NeoVerse", origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth"),
+            ModelConfig(local_model_path=local_model_path, model_id="NeoVerse", origin_file_pattern="Wan2.1_VAE.pth"),
+        ]
+        tokenizer_config = ModelConfig(local_model_path=local_model_path, model_id="NeoVerse", origin_file_pattern="google/*")
         model_manager = ModelManager()
         for model_config in model_configs:
             model_config.download_if_necessary()
@@ -272,6 +281,11 @@ class WanVideoNeoVersePipeline(BasePipeline):
         pipe.prompter.fetch_models(pipe.text_encoder)
         pipe.prompter.fetch_tokenizer(tokenizer_config.path)
 
+        # Load Distilled LoRA for faster inference
+        if lora_path is not None:
+            assert os.path.exists(lora_path), f"LoRA path {lora_path} does not exist."
+            pipe.load_lora(pipe.dit, lora_path, alpha=lora_alpha, lora_type="lightx2v")
+            print(f"Loaded LoRA from {lora_path}")
         return pipe
 
 
@@ -318,10 +332,10 @@ class WanVideoNeoVersePipeline(BasePipeline):
 
         # Inputs
         inputs_posi = {
-            "prompt": prompt,
+            "prompt": prompt if isinstance(prompt, list) else [prompt],
         }
         inputs_nega = {
-            "negative_prompt": negative_prompt,
+            "negative_prompt": negative_prompt if isinstance(negative_prompt, list) else [negative_prompt],
         }
         inputs_shared = {
             "input_video": input_video, "denoising_strength": denoising_strength,
@@ -360,16 +374,6 @@ class WanVideoNeoVersePipeline(BasePipeline):
         video = self.vae.decode(inputs_shared["latents"], device=self.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)
         video = self.vae_output_to_video(video)
         self.load_models_to_device([])
-
-        if self.save_root is not None:
-            output_path = self.save_root + "/"
-            if "dataset" in source_views:
-                output_path += source_views["dataset"][0][0] + "/"
-            if "video_name" in source_views:
-                output_path += source_views["video_name"][0][0] + "/"
-            output_path += "inference.mp4"
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            save_video(video, output_path, fps=15)
         return video
 
 
@@ -423,7 +427,7 @@ class WanVideoUnit_4DPreprocesser(PipelineUnit):
             }
 
         pipe.load_models_to_device(self.onload_model_names)
-        with torch.cuda.amp.autocast(dtype=pipe.torch_dtype):
+        with torch.amp.autocast("cuda", dtype=pipe.torch_dtype):
             recon_output = pipe.reconstructor(source_views, is_inference=False)
         context_num = (~source_views["is_target"]).sum()
         novel_context_poses = self.novel_view_sampling(
@@ -744,7 +748,7 @@ class WanVideoUnit_CameraProcesser(PipelineUnit):
 
 
 class WanVideoUnit_RandomDrop(PipelineUnit):
-    def __init__(self, prompt_drop_prob=0.2, mask_drop_prob=0.2, condition_drop_prob=0.05, **kwargs):
+    def __init__(self, prompt_drop_prob=0.0, mask_drop_prob=0.0, condition_drop_prob=0.0, **kwargs):
         super().__init__(take_over=True)
         self.prompt_drop_prob = prompt_drop_prob
         self.mask_drop_prob = mask_drop_prob

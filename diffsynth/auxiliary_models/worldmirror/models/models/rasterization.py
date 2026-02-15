@@ -20,7 +20,7 @@ class Gaussians:
     def __init__(
         self,
         means: Float[Tensor, "*batch 3"],
-        harmonics: Float[Tensor, "*batch 3 _"],
+        harmonics: Float[Tensor, "*batch _ 3"],
         opacities: Float[Tensor, " *batch"],
         scales: Float[Tensor, "*batch 3"],
         rotations: Float[Tensor, "*batch 4"],
@@ -511,7 +511,6 @@ class GaussianSplatRenderer(nn.Module):
             )
         else:
             gs_params = gs_params_static
-        gt_colors = images.permute(0, 1, 3, 4, 2)
 
         # 2) Select rendering cameras
         if self.training:
@@ -525,7 +524,9 @@ class GaussianSplatRenderer(nn.Module):
         else:
             # Re-predict the camera for novel views and perform translation scale alignment
             pred_all_extrinsic, pred_all_intrinsic = self.prepare_cameras(predictions, S + V)
-            scale_factor = 1.0
+            scale_factor = torch.ones(
+                (B, 1), device=pred_all_extrinsic.device, dtype=pred_all_extrinsic.dtype
+            )
             if "camera_poses" in context_predictions:
                 pred_context_extrinsic, _ = self.prepare_cameras(context_predictions, S)
                 scale_factor = pred_context_extrinsic[:, :, :3, 3].norm(dim=-1).mean(dim=1, keepdim=True) / (
@@ -537,7 +538,6 @@ class GaussianSplatRenderer(nn.Module):
             render_viewmats, render_Ks = pred_all_extrinsic, pred_all_intrinsic
             valid_masks = views.get("valid_mask", torch.ones(B, S + V, H, W, dtype=bool, device=images.device))
             render_timestamps = views["timestamp"]
-        render_world2cam = closed_form_inverse_se3(render_viewmats.reshape(-1, 4, 4)).reshape(B, -1, 4, 4)
 
         # 3) Generate splats from gs_params + predictions, and perform voxel merging
         if self.training:
@@ -548,27 +548,6 @@ class GaussianSplatRenderer(nn.Module):
             splats = self.prepare_splats(views, predictions, images, gs_params, S, position_from="gsdepth+predcamera")
 
         predictions["splats"] = splats
-        # # 4) Rasterization rendering (training: chunked rendering + novel view valid mask correction; evaluation: view-by-view)
-        # rendered_colors, rendered_depths, rendered_alphas = self.rasterizer.forward(
-        #     splats,
-        #     render_viewmats=render_world2cam.detach(),
-        #     render_Ks=render_Ks.detach(),
-        #     render_timestamps=render_timestamps,
-        #     sh_degree=min(self.sh_degree, 0),
-        #     width=W, height=H,
-        # )
-
-        # if self.training and V > 0:
-        #     nvs_rendered_mask = rendered_alphas[:, S:, ..., 0].detach() > 0.1
-        #     valid_masks[:, S:] = nvs_rendered_mask & valid_masks[:, S:]
-
-        # # 5) return predictions
-        # predictions["rendered_colors"] = rendered_colors
-        # predictions["rendered_depths"] = rendered_depths
-        # predictions["rendered_alphas"] = rendered_alphas
-        # predictions["gt_colors"] = gt_colors
-        # predictions["gt_depths"] = views.get("depthmap")
-        # predictions["valid_masks"] = valid_masks.bool()
         predictions["rendered_extrinsics"] = render_viewmats
         predictions["rendered_intrinsics"] = render_Ks
         predictions["rendered_timestamps"] = render_timestamps
