@@ -5,6 +5,7 @@ einops
 numpy
 Pillow
 tqdm
+sentencepiece
 
 # Video/Image processing
 imageio
@@ -24,6 +25,10 @@ evo
 e3nn
 addict
 moviepy==1.0.3
+
+# Demo
+gradio
+trimesh
 
 # Training
 accelerate

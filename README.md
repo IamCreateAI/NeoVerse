@@ -9,7 +9,7 @@
 <a href='https://arxiv.org/abs/2601.00393'><img src='https://img.shields.io/badge/arXiv-2601.00393-b31b1b?logo=arxiv'></a> &nbsp;
 <a href='https://neoverse-4d.github.io'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;
 <a href='https://huggingface.co/Yuppie1204/NeoVerse'><img src='https://img.shields.io/badge/Hugging Face-Model-gold?logo=huggingface'></a> &nbsp;
-<a href='https://www.modelscope.cn/models/Yuppie1204/NeoVerse'><img src='https://img.shields.io/badge/Hugging Face-Model-blueviolet?logo=modelscope'></a> &nbsp;
+<a href='https://www.modelscope.cn/models/Yuppie1204/NeoVerse'><img src='https://img.shields.io/badge/ModelScope-Model-blueviolet?logo=modelscope'></a> &nbsp;
 <a href='https://www.bilibili.com/video/BV1ezvYBBEMi'><img src='https://img.shields.io/badge/BiliBili-Video-479fd1?logo=bilibili'></a> &nbsp;
 <a href='https://youtu.be/1k8Ikf8zbZw'><img src='https://img.shields.io/badge/YouTube-Video-orange?logo=youtube'></a>
 
@@ -23,6 +23,14 @@ https://github.com/user-attachments/assets/4c957bd7-64e1-4a7e-9993-136740d911fe
 
 - **[2026-02-16]** Release inference scripts and model checkpoints in both [Hugging Face](https://huggingface.co/Yuppie1204/NeoVerse) and [ModelScope](https://www.modelscope.cn/models/Yuppie1204/NeoVerse).
 - **[2026-01-01]** Release arXiv paper.
+
+
+## TL;DR
+
+- **Simple Inference Script** — Generate novel-trajectory videos with a single `python inference.py` command
+- **Interactive Gradio Demo** — Step-by-step web UI for reconstruction, trajectory design, and generation
+- **Multiple Reconstructors** — Supports different 3D reconstructors (e.g., [Depth Anything 3](https://depth-anything-3.github.io/)) via a plug-and-play interface
+- **Fast Inference** — Inference pipeline completes in under 30 seconds with distilled LoRA acceleration on a single A800.
 
 ## Installation
 
@@ -245,7 +253,7 @@ If you find this work helpful, please help star the repository and consider citi
 
 ## Acknowledgments
 
-We sincerely thank the great work [VGGT](https://vgg-t.github.io/), [WorldMirror](https://3d-models.hunyuan.tencent.com/world/), [Depth Anything 3](https://depth-anything-3.github.io/), [Wan-Video](https://github.com/Wan-Video/Wan2.1), [TrajectoryCrafter](https://trajectorycrafter.github.io/), and [ReCamMaster](https://jianhongbai.github.io/ReCamMaster/) for their inspiring work and contributions to the 3D and video generation community.
+We sincerely thank the great work [VGGT](https://vgg-t.github.io/), [WorldMirror](https://3d-models.hunyuan.tencent.com/world/), [Depth Anything 3](https://depth-anything-3.github.io/), [Wan-Video](https://github.com/Wan-Video/Wan2.1), [TrajectoryCrafter](https://trajectorycrafter.github.io/), [ReCamMaster](https://jianhongbai.github.io/ReCamMaster/), and [DiffSynth-Studio](https://github.com/modelscope/DiffSynth-Studio) for their inspiring work and contributions to the 3D and video generation community.
 
 ## Contact Us
 
