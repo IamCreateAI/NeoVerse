@@ -1,5 +1,7 @@
 # NeoVerse: Enhancing 4D World Model with in-the-wild Monocular Videos
 
+<strong>Computer Vision and Pattern Recognition (CVPR) 2026</strong>
+
 [Yuxue Yang](https://yuxueyang1204.github.io)<sup>1, 2</sup>, [Lue Fan](https://lue.fan)<sup>1 ✉️ †</sup>, [Ziqi Shi](https://renshengji.github.io)<sup>1</sup>, [Junran Peng](https://jrpeng.github.io)<sup>1</sup>, [Feng Wang](https://happynear.wang)<sup>2</sup>, [Zhaoxiang Zhang](https://zhaoxiangzhang.net)<sup>1 ✉️</sup>
 
 <sup>1</sup>NLPR & MAIS, CASIA&emsp; <sup>2</sup>CreateAI
@@ -21,6 +23,7 @@ https://github.com/user-attachments/assets/4c957bd7-64e1-4a7e-9993-136740d911fe
 
 ## Updates
 
+- **[2026-02-21]** NeoVerse has been accepted by **CVPR 2026**!
 - **[2026-02-16]** Release inference scripts and model checkpoints in both [Hugging Face](https://huggingface.co/Yuppie1204/NeoVerse) and [ModelScope](https://www.modelscope.cn/models/Yuppie1204/NeoVerse).
 - **[2026-01-01]** Release arXiv paper.
 
