@@ -18,6 +18,7 @@ huggingface_hub
 modelscope
 
 # 3D reconstruction
+plyfile
 jaxtyping
 scipy
 matplotlib
