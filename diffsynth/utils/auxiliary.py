@@ -142,7 +142,7 @@ def center_crop(image, resolution):
     return scaled_image.crop((left, top, right, bottom))
 
 
-def load_video(data, num_frames, resolution=(560, 336), resize_mode="center_crop", static_scene=False):
+def load_video(data, num_frames, resolution=(560, 336), resize_mode="center_crop", static_scene=False, sampling="uniform", frame_offset=0):
     """Load video frames from a video file or image directory or image set.
 
     Args:
@@ -151,6 +151,9 @@ def load_video(data, num_frames, resolution=(560, 336), resize_mode="center_crop
         resolution: (width, height) to resize/crop to.
         resize_mode: "center_crop" or "resize".
         static_scene: Whether the scene is static (default: False).
+        sampling: "uniform" to sample evenly across the sequence, "first" to take
+                  the first num_frames frames (default: "uniform").
+        frame_offset: Number of frames to skip from the start before sampling (default: 0).
     Returns:
         List of PIL Images.
     """
@@ -159,35 +162,36 @@ def load_video(data, num_frames, resolution=(560, 336), resize_mode="center_crop
             return image.resize(resolution, resample=Image.LANCZOS)
         return center_crop(image, resolution)
 
+    def _sample_indices(total, n):
+        available = total - frame_offset
+        if available <= 0:
+            raise ValueError(f"frame_offset ({frame_offset}) is >= total frames ({total})")
+        if static_scene:
+            return np.arange(frame_offset, total)
+        if sampling == "first":
+            return np.arange(frame_offset, frame_offset + min(n, available))
+        return np.linspace(frame_offset, total - 1, n, dtype=int)
+
     assert isinstance(data, (str, list)), f"data must be a string path or a list of image paths, got {type(data)}"
     if isinstance(data, str) and data.endswith((".jpg", ".jpeg", ".png")):
         data = [data]
 
     if isinstance(data, list):
         image_paths = sorted(data, key=lambda x: os.path.basename(x))
-        if static_scene:
-            sample_indices = np.arange(len(image_paths))
-        else:
-            sample_indices = np.linspace(0, len(image_paths) - 1, num_frames, dtype=int)
+        sample_indices = _sample_indices(len(image_paths), num_frames)
         images = []
         for idx in sample_indices:
             images.append(_process_frame(Image.open(image_paths[idx])))
     elif os.path.isdir(data):
         image_names = sorted(os.listdir(data))
-        if static_scene:
-            sample_indices = np.arange(len(image_names))
-        else:
-            sample_indices = np.linspace(0, len(image_names) - 1, num_frames, dtype=int)
+        sample_indices = _sample_indices(len(image_names), num_frames)
         images = []
         for idx in sample_indices:
             img_path = os.path.join(data, image_names[idx])
             images.append(_process_frame(Image.open(img_path)))
     elif os.path.isfile(data):
         video_reader = VideoReader(data)
-        if static_scene:
-            sample_indices = np.arange(len(video_reader))
-        else:
-            sample_indices = np.linspace(0, len(video_reader) - 1, num_frames, dtype=int)
+        sample_indices = _sample_indices(len(video_reader), num_frames)
         raw_frames = video_reader.get_batch(sample_indices).asnumpy()
         images = [_process_frame(Image.fromarray(f)) for f in raw_frames]
     else:

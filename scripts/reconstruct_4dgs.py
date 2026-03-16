@@ -44,10 +44,17 @@ def parse_args():
                    help="Path to reconstructor checkpoint")
     p.add_argument("--output_dir", default="outputs/reconstruction",
                    help="Directory where outputs are saved")
-    p.add_argument("--num_frames", type=int, default=81,
+    p.add_argument("--num_frames", type=int, default=120,
                    help="Number of frames to sample from the video")
-    p.add_argument("--height", type=int, default=560)
-    p.add_argument("--width", type=int, default=560)
+    p.add_argument("--sampling", choices=["uniform", "first"], default="uniform",
+                   help="Frame sampling strategy: 'uniform' spreads frames across the video, "
+                        "'first' takes the first num_frames frames (default: uniform)")
+    p.add_argument("--frame_offset", type=int, default=0,
+                   help="Skip this many frames from the start before applying the sampling strategy (default: 0)")
+    p.add_argument("--height", type=int, default=336)
+    p.add_argument("--width", type=int, default=336)
+    p.add_argument("--resize_mode", choices=["center_crop", "resize"], default="center_crop",
+                   help="How to fit frames to the target resolution (default: center_crop)")
     p.add_argument("--static_scene", action="store_true",
                    help="All frames share the same timestamp (static camera / single image)")
     p.add_argument("--save_all_frames_ply", action="store_true",
@@ -83,8 +90,10 @@ def main():
         args.input_path,
         num_frames=args.num_frames,
         resolution=resolution,
-        resize_mode="center_crop",
+        resize_mode=args.resize_mode,
         static_scene=args.static_scene,
+        sampling=args.sampling,
+        frame_offset=args.frame_offset,
     )
     S = len(pil_images)
     print(f"Loaded {S} frames at {args.width}x{args.height}.")
