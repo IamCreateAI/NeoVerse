@@ -11,13 +11,16 @@ Outputs (saved to --output_dir):
   render.mp4            - re-rendered input views (with --render_video, for sanity checking)
 
 Usage:
-  python reconstruct_4dgs.py --input_path examples/videos/robot.mp4
-  python reconstruct_4dgs.py --input_path examples/videos/robot.mp4 --render_video
-  python reconstruct_4dgs.py --input_path examples/videos/robot.mp4 --static_scene
+  python scripts/reconstruct_4dgs.py --input_path examples/videos/robot.mp4
+  python scripts/reconstruct_4dgs.py --input_path examples/videos/robot.mp4 --render_video
+  python scripts/reconstruct_4dgs.py --input_path examples/videos/robot.mp4 --static_scene
 """
 
 import argparse
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import torch
@@ -43,7 +46,7 @@ def parse_args():
                    help="Directory where outputs are saved")
     p.add_argument("--num_frames", type=int, default=81,
                    help="Number of frames to sample from the video")
-    p.add_argument("--height", type=int, default=336)
+    p.add_argument("--height", type=int, default=560)
     p.add_argument("--width", type=int, default=560)
     p.add_argument("--static_scene", action="store_true",
                    help="All frames share the same timestamp (static camera / single image)")

@@ -14,12 +14,16 @@ Requires only the files produced by reconstruct_4dgs.py:
   camera_params.json  - per-frame intrinsics & cam2world poses
 
 Usage:
-  python view_4dgs.py --output_dir outputs/my_reconstruction
-  python view_4dgs.py --output_dir outputs/my_reconstruction --host 0.0.0.0 --port 8080
+  python scripts/view_4dgs.py --output_dir outputs/my_reconstruction
+  python scripts/view_4dgs.py --output_dir outputs/my_reconstruction --host 0.0.0.0 --port 8080
 """
 
 import argparse
 import json
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
 from pathlib import Path
 
