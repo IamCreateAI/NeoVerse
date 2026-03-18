@@ -191,9 +191,8 @@ def train():
             imgs = batch["img"].to(device)
             gt   = batch["gt"].to(device)
             optimizer.zero_grad()
-            with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-                preds = model(build_views(imgs, num_frames, device), is_inference=False, use_motion=False)
-                loss  = F.mse_loss(preds["hand_joints"], gt)
+            preds = model(build_views(imgs, num_frames, device), is_inference=False, use_motion=False)
+            loss  = F.mse_loss(preds["hand_joints"], gt)
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
@@ -208,9 +207,8 @@ def train():
                 for batch in tqdm(val_loader, desc=f"Val {epoch}", leave=False):
                     imgs = batch["img"].to(device)
                     gt   = batch["gt"].to(device)
-                    with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-                        preds = model(build_views(imgs, num_frames, device), is_inference=False, use_motion=False)
-                        val_loss += F.mse_loss(preds["hand_joints"], gt).item()
+                    preds = model(build_views(imgs, num_frames, device), is_inference=False, use_motion=False)
+                    val_loss += F.mse_loss(preds["hand_joints"], gt).item()
             val_loss /= max(len(val_loader), 1)
 
             lr = scheduler.get_last_lr()[0]

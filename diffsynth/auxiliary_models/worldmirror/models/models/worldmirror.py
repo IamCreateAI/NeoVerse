@@ -84,10 +84,10 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         )
 
         # freeze backbone
-        if kwargs.get("freeze_backbone", True):
+        self.freeze_backbone = kwargs.get("freeze_backbone", True)
+        if self.freeze_backbone:
             for param in self.visual_geometry_transformer.parameters():
                 param.requires_grad = False
-            print("backbone frozen")
 
         # Initialize prediction heads
         self._init_heads(embed_dim, patch_size, gs_dim)
@@ -225,13 +225,15 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
             use_motion = False
 
         # Extract priors and process features based on conditional input
-        if use_cond:
-            priors = self.extract_priors(views)
-            token_list, patch_start_idx, fwd_token_list, bwd_token_list = self.visual_geometry_transformer(
-                imgs, priors, cond_flags=cond_flags, use_motion=(use_motion and is_inference)
-            )
-        else:
-            token_list, patch_start_idx, fwd_token_list, bwd_token_list = self.visual_geometry_transformer(imgs, use_motion=(use_motion and is_inference))
+        backbone_ctx = torch.no_grad() if self.freeze_backbone else torch.enable_grad()
+        with backbone_ctx:
+            if use_cond:
+                priors = self.extract_priors(views)
+                token_list, patch_start_idx, fwd_token_list, bwd_token_list = self.visual_geometry_transformer(
+                    imgs, priors, cond_flags=cond_flags, use_motion=(use_motion and is_inference)
+                )
+            else:
+                token_list, patch_start_idx, fwd_token_list, bwd_token_list = self.visual_geometry_transformer(imgs, use_motion=(use_motion and is_inference))
 
         # Generate all predictions
         preds = self._gen_all_preds(
