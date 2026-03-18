@@ -6,3 +6,4 @@ __pycache__
 
 /outputs
 /models/NeoVerse
+/wandb

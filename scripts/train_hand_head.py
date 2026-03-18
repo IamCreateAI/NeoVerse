@@ -12,6 +12,7 @@ from diffsynth.utils.auxiliary import load_video
 from torchvision.transforms import functional as TVF
 import argparse
 from tqdm import tqdm
+import wandb
 
 from diffsynth.auxiliary_models.worldmirror.models.models.worldmirror import WorldMirror
 
@@ -127,6 +128,7 @@ def train():
     data_cfg     = cfg["data"]
     model_cfg    = cfg["model"]
     training_cfg = cfg["training"]
+    wandb_cfg    = cfg.get("wandb", {})
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -180,6 +182,18 @@ def train():
 
     print(f"Training on {device} | {epochs} epochs | batch_size={batch_size}")
 
+    # --- WANDB ---
+    use_wandb = wandb_cfg.get("enabled", False)
+    if use_wandb:
+        wandb.init(
+            project=wandb_cfg.get("project", "hand-head-training"),
+            entity=wandb_cfg.get("entity") or None,
+            name=wandb_cfg.get("run_name") or None,
+            tags=wandb_cfg.get("tags") or [],
+            notes=wandb_cfg.get("notes") or None,
+            config={**data_cfg, **model_cfg, **training_cfg},
+        )
+
     best_val_loss = float("inf")
 
     epoch_bar = tqdm(range(1, epochs + 1), desc="Epochs")
@@ -213,13 +227,18 @@ def train():
 
             lr = scheduler.get_last_lr()[0]
             epoch_bar.set_postfix(train=f"{train_loss:.6f}", val=f"{val_loss:.6f}", lr=f"{lr:.2e}")
+            if use_wandb:
+                wandb.log({"train/loss": train_loss, "val/loss": val_loss, "lr": lr}, step=epoch)
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 torch.save(model.hand_head.state_dict(), os.path.join(output_dir, "hand_head_best.pt"))
                 tqdm.write("  -> New best. Saved.")
         else:
-            epoch_bar.set_postfix(train=f"{train_loss:.6f}", lr=f"{scheduler.get_last_lr()[0]:.2e}")
+            lr = scheduler.get_last_lr()[0]
+            epoch_bar.set_postfix(train=f"{train_loss:.6f}", lr=f"{lr:.2e}")
+            if use_wandb:
+                wandb.log({"train/loss": train_loss, "lr": lr}, step=epoch)
 
         if epoch % save_every == 0:
             torch.save(model.hand_head.state_dict(), os.path.join(output_dir, f"hand_head_epoch{epoch:04d}.pt"))
@@ -228,6 +247,9 @@ def train():
     final = training_cfg.get("output_weights", os.path.join(output_dir, "hand_head_final.pt"))
     torch.save(model.hand_head.state_dict(), final)
     print(f"Final weights saved to: {final}")
+
+    if use_wandb:
+        wandb.finish()
 
 
 if __name__ == "__main__":

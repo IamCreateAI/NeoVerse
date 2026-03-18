@@ -21,3 +21,11 @@ training:
   seed: 42
   output_dir: "checkpoints"
   output_weights: "hand_head_weights.pt"
+
+wandb:
+  enabled: true
+  project: "hand-head-training"
+  entity: 3DV-Project
+  run_name: Test
+  tags: []
+  notes: null
