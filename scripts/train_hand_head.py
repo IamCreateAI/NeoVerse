@@ -175,8 +175,9 @@ def train():
     optimizer  = Adam(hand_params, lr=float(training_cfg["lr"]))
     scheduler  = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=float(training_cfg.get("min_lr", 1e-6)))
 
-    log_every  = training_cfg.get("log_every", 5)
-    save_every = training_cfg.get("save_every", 10)
+    log_every  = training_cfg.get("log_every", 500)   # steps
+    val_every  = training_cfg.get("val_every", 2000)  # steps
+    save_every = training_cfg.get("save_every", 10)   # epochs
     output_dir = training_cfg.get("output_dir", "checkpoints")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -195,12 +196,11 @@ def train():
         )
 
     best_val_loss = float("inf")
+    global_step = 0
 
-    epoch_bar = tqdm(range(1, epochs + 1), desc="Epochs")
-    for epoch in epoch_bar:
+    for epoch in tqdm(range(1, epochs + 1), desc="Epochs"):
         # --- TRAIN ---
         model.train()
-        train_loss = 0.0
         for batch in tqdm(train_loader, desc=f"Train {epoch}", leave=False):
             imgs = batch["img"].to(device)
             gt   = batch["gt"].to(device)
@@ -209,36 +209,34 @@ def train():
             loss  = F.mse_loss(preds["hand_joints"], gt)
             loss.backward()
             optimizer.step()
-            train_loss += loss.item()
-        train_loss /= len(train_loader)
+            global_step += 1
+
+            if global_step % log_every == 0:
+                lr = scheduler.get_last_lr()[0]
+                tqdm.write(f"  step {global_step} | train_loss={loss.item():.6f} | lr={lr:.2e}")
+                if use_wandb:
+                    wandb.log({"train/loss": loss.item(), "lr": lr}, step=global_step)
+
+            if global_step % val_every == 0:
+                model.eval()
+                val_loss = 0.0
+                with torch.no_grad():
+                    for vbatch in tqdm(val_loader, desc="Val", leave=False):
+                        imgs = vbatch["img"].to(device)
+                        gt   = vbatch["gt"].to(device)
+                        preds = model(build_views(imgs, num_frames, device), is_inference=False, use_motion=False)
+                        val_loss += F.mse_loss(preds["hand_joints"], gt).item()
+                val_loss /= max(len(val_loader), 1)
+                tqdm.write(f"  step {global_step} | val_loss={val_loss:.6f}")
+                if use_wandb:
+                    wandb.log({"val/loss": val_loss}, step=global_step)
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    torch.save(model.hand_head.state_dict(), os.path.join(output_dir, "hand_head_best.pt"))
+                    tqdm.write("  -> New best. Saved.")
+                model.train()
+
         scheduler.step()
-
-        # --- VAL ---
-        if epoch % log_every == 0 or epoch == epochs:
-            model.eval()
-            val_loss = 0.0
-            with torch.no_grad():
-                for batch in tqdm(val_loader, desc=f"Val {epoch}", leave=False):
-                    imgs = batch["img"].to(device)
-                    gt   = batch["gt"].to(device)
-                    preds = model(build_views(imgs, num_frames, device), is_inference=False, use_motion=False)
-                    val_loss += F.mse_loss(preds["hand_joints"], gt).item()
-            val_loss /= max(len(val_loader), 1)
-
-            lr = scheduler.get_last_lr()[0]
-            epoch_bar.set_postfix(train=f"{train_loss:.6f}", val=f"{val_loss:.6f}", lr=f"{lr:.2e}")
-            if use_wandb:
-                wandb.log({"train/loss": train_loss, "val/loss": val_loss, "lr": lr}, step=epoch)
-
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                torch.save(model.hand_head.state_dict(), os.path.join(output_dir, "hand_head_best.pt"))
-                tqdm.write("  -> New best. Saved.")
-        else:
-            lr = scheduler.get_last_lr()[0]
-            epoch_bar.set_postfix(train=f"{train_loss:.6f}", lr=f"{lr:.2e}")
-            if use_wandb:
-                wandb.log({"train/loss": train_loss, "lr": lr}, step=epoch)
 
         if epoch % save_every == 0:
             torch.save(model.hand_head.state_dict(), os.path.join(output_dir, f"hand_head_epoch{epoch:04d}.pt"))
