@@ -164,8 +164,9 @@ def train():
     num_frames  = data_cfg["num_frames"]
     res         = tuple(data_cfg["resolution"])
     clip_stride = data_cfg.get("clip_stride", num_frames)
-    batch_size  = training_cfg.get("batch_size", 2)
-    num_workers = data_cfg.get("num_workers", 4)
+    batch_size       = training_cfg.get("batch_size", 2)
+    grad_accum_steps = training_cfg.get("grad_accum_steps", 1)
+    num_workers      = data_cfg.get("num_workers", 4)
 
     train_set = HOT3DHandDataset(train_seqs, num_frames=num_frames, res=res, clip_stride=clip_stride)
     val_set   = HOT3DHandDataset(val_seqs,   num_frames=num_frames, res=res, clip_stride=clip_stride)
@@ -221,15 +222,18 @@ def train():
     for epoch in tqdm(range(1, epochs + 1), desc="Epochs"):
         # --- TRAIN ---
         model.train()
-        for batch in tqdm(train_loader, desc=f"Train {epoch}", leave=False):
+        optimizer.zero_grad()
+        for batch_idx, batch in enumerate(tqdm(train_loader, desc=f"Train {epoch}", leave=False)):
             imgs = batch["img"].to(device)
             gt   = batch["gt"].to(device)
-            optimizer.zero_grad()
             preds = model(build_views(imgs, num_frames, device), is_inference=False, use_motion=False)
-            loss  = F.mse_loss(preds["hand_joints"], gt)
+            loss  = F.mse_loss(preds["hand_joints"], gt) / grad_accum_steps
             loss.backward()
-            optimizer.step()
-            global_step += 1
+
+            if (batch_idx + 1) % grad_accum_steps == 0:
+                optimizer.step()
+                optimizer.zero_grad()
+                global_step += 1
 
             if global_step % log_every == 0:
                 lr = scheduler.get_last_lr()[0]

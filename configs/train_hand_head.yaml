@@ -22,6 +22,7 @@ training:
   min_lr: 1e-6
   epochs: 10
   batch_size: 1
+  grad_accum_steps: 4
   log_every: 250    # steps between train loss logs
   val_every: 250    # steps between validation runs
   save_every: 10    # epochs between checkpoint saves
