@@ -133,7 +133,7 @@ def train():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # --- MODEL ---
-    model = WorldMirror(enable_hand=model_cfg["enable_hand"], freeze_backbone=model_cfg["freeze_backbone"])
+    model = WorldMirror(**{k: v for k, v in model_cfg.items() if k != "checkpoint"})
     checkpoint = torch.load(model_cfg["checkpoint"], map_location=device)
     state_dict = checkpoint.get("state_dict", checkpoint.get("reconstructor", checkpoint))
     missing, _ = model.load_state_dict(state_dict, strict=False)

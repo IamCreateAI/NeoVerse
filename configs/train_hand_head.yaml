@@ -8,8 +8,14 @@ data:
 
 model:
   checkpoint: "models/NeoVerse/reconstructor.ckpt"
-  enable_hand: true
   freeze_backbone: true
+  enable_hand: true
+  enable_cam: false
+  enable_pts: false
+  enable_depth: false
+  enable_norm: false
+  enable_motion: false
+  enable_gs: false
 
 training:
   lr: 1e-4
