@@ -204,6 +204,20 @@ def train():
     best_val_loss = float("inf")
     global_step = 0
 
+    # --- STEP 0 REFERENCE VAL ---
+    model.eval()
+    val_loss = 0.0
+    with torch.no_grad():
+        for vbatch in tqdm(val_loader, desc="Val (step 0)", leave=False):
+            imgs = vbatch["img"].to(device)
+            gt   = vbatch["gt"].to(device)
+            preds = model(build_views(imgs, num_frames, device), is_inference=False, use_motion=False)
+            val_loss += F.mse_loss(preds["hand_joints"], gt).item()
+    val_loss /= max(len(val_loader), 1)
+    tqdm.write(f"  step 0 | val_loss={val_loss:.6f}")
+    if use_wandb:
+        wandb.log({"val/loss": val_loss}, step=0)
+
     for epoch in tqdm(range(1, epochs + 1), desc="Epochs"):
         # --- TRAIN ---
         model.train()
