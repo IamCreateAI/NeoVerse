@@ -44,3 +44,7 @@ ftfy
 
 # Dataset processing
 pandas
+
+# Hand visualization (MANO)
+smplx
+projectaria-tools

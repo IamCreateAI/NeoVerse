@@ -201,7 +201,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         if self.enable_hand:
             self.hand_head = DPTHead(
                 dim_in=2 * dim,
-                output_dim=44,       # 2 hands * (3 t_xyz + 4 q_wxyz + 15 pose)
+                output_dim=64,       # 2 hands * (3 t_xyz + 4 q_wxyz + 15 pose + 10 betas)
                 patch_size=patch_size,
                 activation="linear+none",
             )

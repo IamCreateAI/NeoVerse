@@ -3,7 +3,7 @@ data:
   num_frames: 16
   resolution: [224, 224]
   clip_stride: 8
-  val_split: 0.1
+  val_split: 0.05
   num_workers: 4
 
 model:
@@ -20,7 +20,7 @@ model:
 training:
   lr: 1e-4
   min_lr: 1e-6
-  epochs: 10
+  epochs: 1
   batch_size: 1
   grad_accum_steps: 4
   log_every: 250    # steps between train loss logs
@@ -28,11 +28,15 @@ training:
   save_every: 10    # epochs between checkpoint saves
   seed: 42
   output_dir: "checkpoints"
-  output_weights: "hand_head_weights.pt"
+  output_weights: "vis_test.pt"
+
+visualization:
+  mano_model_folder: "models/MANO"
+  num_vis_frames: 4
 
 debug:
   enabled: true
-  max_sequences: 10
+  max_sequences: 100
 
 wandb:
   enabled: true
