@@ -372,17 +372,17 @@ def train():
                 global_step += 1
 
                 # --- Train logging ---
+                if use_wandb:
+                    wandb.log({"train/loss": loss.item(), "lr": scheduler.get_last_lr()[0]}, step=global_step)
+
                 if global_step % log_every == 0 or global_step == 1:
                     lr = scheduler.get_last_lr()[0]
                     tqdm.write(f"  step {global_step} | train_loss={loss.item():.6f} | lr={lr:.2e}")
-                    if use_wandb:
-                        log_dict = {"train/loss": loss.item(), "lr": lr}
-                        if train_vis_items:
-                            train_images = render_train_vis(model, train_vis_items, num_frames, device, render_fn)
-                            if train_images:
-                                log_dict["train/hand_overlay"] = train_images
-                            model.train()
-                        wandb.log(log_dict, step=global_step)
+                    if use_wandb and train_vis_items:
+                        train_images = render_train_vis(model, train_vis_items, num_frames, device, render_fn)
+                        if train_images:
+                            wandb.log({"train/hand_overlay": train_images}, step=global_step)
+                        model.train()
 
                 # --- Validation ---
                 if val_loader and (global_step % val_every == 0 or global_step == 1):
