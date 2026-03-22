@@ -17,6 +17,11 @@ decord
 huggingface_hub
 modelscope
 
+# Evaluation metrics
+lpips
+scikit-image
+torchmetrics
+
 # 3D reconstruction
 plyfile
 jaxtyping
