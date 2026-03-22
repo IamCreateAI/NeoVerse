@@ -274,13 +274,6 @@ def train():
         all_seqs = all_seqs[:max_seqs]
         print(f"[DEBUG] Limited to {len(all_seqs)} sequences")
 
-    random.seed(training_cfg.get("seed", 42))
-    random.shuffle(all_seqs)
-    n_val = int(len(all_seqs) * float(data_cfg.get("val_split", 0.1)))
-    if n_val == 0:
-        print("[WARN] No validation sequences — validation disabled, no best checkpoint will be saved")
-    val_seqs, train_seqs = all_seqs[:n_val], all_seqs[n_val:]
-
     num_frames       = data_cfg["num_frames"]
     res              = tuple(data_cfg["resolution"])
     clip_stride      = data_cfg.get("clip_stride", num_frames)
@@ -288,12 +281,27 @@ def train():
     grad_accum_steps = training_cfg.get("grad_accum_steps", 1)
     num_workers      = data_cfg.get("num_workers", 4)
 
-    train_set = HOT3DHandDataset(train_seqs, num_frames=num_frames, res=res, clip_stride=clip_stride)
+    if debug_cfg.get("single_frame", False):
+        # Overfit on a single clip from the middle of the first sequence
+        single_set = HOT3DHandDataset(all_seqs[:1], num_frames=num_frames, res=res, clip_stride=clip_stride)
+        mid = len(single_set.clips) // 2
+        single_set.clips = [single_set.clips[mid]]
+        train_set = val_set = single_set
+        print(f"[DEBUG] Single-frame overfit: seq={os.path.basename(all_seqs[0])}, clip offset={single_set.clips[0]['frame_offset']}")
+    else:
+        random.seed(training_cfg.get("seed", 42))
+        random.shuffle(all_seqs)
+        n_val = int(len(all_seqs) * float(data_cfg.get("val_split", 0.1)))
+        if n_val == 0:
+            print("[WARN] No validation sequences — validation disabled, no best checkpoint will be saved")
+        val_seqs, train_seqs = all_seqs[:n_val], all_seqs[n_val:]
+        train_set = HOT3DHandDataset(train_seqs, num_frames=num_frames, res=res, clip_stride=clip_stride)
+        val_set = HOT3DHandDataset(val_seqs, num_frames=num_frames, res=res, clip_stride=clip_stride) if val_seqs else None
+
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True,
                               num_workers=num_workers, pin_memory=True, drop_last=True)
 
-    if val_seqs:
-        val_set = HOT3DHandDataset(val_seqs, num_frames=num_frames, res=res, clip_stride=clip_stride)
+    if val_set is not None and len(val_set.clips) > 0:
         val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False,
                                 num_workers=num_workers, pin_memory=True, drop_last=False)
         print(f"Train clips: {len(train_set)} | Val clips: {len(val_set)}")

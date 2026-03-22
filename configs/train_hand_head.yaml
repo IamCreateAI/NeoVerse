@@ -37,6 +37,7 @@ visualization:
 debug:
   enabled: false
   max_sequences: 100
+  single_frame: true
 
 wandb:
   enabled: true
