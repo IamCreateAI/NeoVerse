@@ -276,7 +276,9 @@ def train():
 
     random.seed(training_cfg.get("seed", 42))
     random.shuffle(all_seqs)
-    n_val = max(1, int(len(all_seqs) * float(data_cfg.get("val_split", 0.1))))
+    n_val = int(len(all_seqs) * float(data_cfg.get("val_split", 0.1)))
+    if n_val == 0:
+        print("[WARN] No validation sequences — validation disabled, no best checkpoint will be saved")
     val_seqs, train_seqs = all_seqs[:n_val], all_seqs[n_val:]
 
     num_frames       = data_cfg["num_frames"]
@@ -287,13 +289,18 @@ def train():
     num_workers      = data_cfg.get("num_workers", 4)
 
     train_set = HOT3DHandDataset(train_seqs, num_frames=num_frames, res=res, clip_stride=clip_stride)
-    val_set   = HOT3DHandDataset(val_seqs,   num_frames=num_frames, res=res, clip_stride=clip_stride)
-    print(f"Train clips: {len(train_set)} | Val clips: {len(val_set)}")
-
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True,
                               num_workers=num_workers, pin_memory=True, drop_last=True)
-    val_loader   = DataLoader(val_set,   batch_size=batch_size, shuffle=False,
-                              num_workers=num_workers, pin_memory=True, drop_last=False)
+
+    if val_seqs:
+        val_set = HOT3DHandDataset(val_seqs, num_frames=num_frames, res=res, clip_stride=clip_stride)
+        val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False,
+                                num_workers=num_workers, pin_memory=True, drop_last=False)
+        print(f"Train clips: {len(train_set)} | Val clips: {len(val_set)}")
+    else:
+        val_set = None
+        val_loader = None
+        print(f"Train clips: {len(train_set)} | Val clips: 0")
 
     # --- Visualization setup ---
     vis_cfg = cfg.get("visualization", {})
@@ -303,13 +310,15 @@ def train():
     val_vis_items = []
     train_vis_items = []
 
-    if mano_folder and (len(val_set.clips) > 0 or len(train_set.clips) > 0):
+    has_val_clips = val_set is not None and len(val_set.clips) > 0
+    if mano_folder and (has_val_clips or len(train_set.clips) > 0):
         from scripts.hand_vis_utils import MANOModel, render_hand_comparison
         render_fn = render_hand_comparison
         mano_model = MANOModel(mano_folder)
         seq_cache = {}
 
-        val_vis_items = setup_vis_items(val_set, num_vis_frames, seq_cache, mano_model)
+        if has_val_clips:
+            val_vis_items = setup_vis_items(val_set, num_vis_frames, seq_cache, mano_model)
         train_vis_items = setup_vis_items(train_set, num_vis_frames, seq_cache, mano_model, preload=True)
 
         if val_vis_items or train_vis_items:
@@ -376,7 +385,7 @@ def train():
                         wandb.log(log_dict, step=global_step)
 
                 # --- Validation ---
-                if global_step % val_every == 0 or global_step == 1:
+                if val_loader and (global_step % val_every == 0 or global_step == 1):
                     val_loss, captured = run_validation(model, val_loader, num_frames, device, val_vis_clip_indices)
                     tqdm.write(f"  step {global_step} | val_loss={val_loss:.6f}")
 
