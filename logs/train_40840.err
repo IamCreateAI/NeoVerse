@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/home/dmonopoli/FF-4DGS-Ego/scripts/train_hand_head.py", line 7, in <module>
-    from diffsynth.models import ModelManager
-ModuleNotFoundError: No module named 'diffsynth'

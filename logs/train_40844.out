@@ -1,4 +1,0 @@
-Loading models from: models/reconstructor.ckpt
-    model_name: reconstructor model_class: WorldMirror
-        This model is initialized with extra kwargs: {'enable_norm': False, 'strict_load': True}
-backbone frozen

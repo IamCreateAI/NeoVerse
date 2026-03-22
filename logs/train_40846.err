@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/home/dmonopoli/FF-4DGS-Ego/scripts/train_hand_head.py", line 137, in <module>
-    train()
-  File "/home/dmonopoli/FF-4DGS-Ego/scripts/train_hand_head.py", line 71, in train
-    args = parser.parse_argument_group().parser.parse_args()
-AttributeError: 'ArgumentParser' object has no attribute 'parse_argument_group'. Did you mean: 'add_argument_group'?

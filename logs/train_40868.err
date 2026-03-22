@@ -1,4 +1,0 @@
-usage: train_hand_head.py [-h] --seq_path SEQ_PATH [--checkpoint CHECKPOINT]
-                          [--lr LR] [--epochs EPOCHS]
-                          [--num_frames NUM_FRAMES]
-train_hand_head.py: error: unrecognized arguments: -- num_frames 4 --checkpoint models/reconstructor.ckpt
