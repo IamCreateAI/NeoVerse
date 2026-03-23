@@ -381,7 +381,7 @@ def train():
             name=wandb_cfg.get("run_name") or None,
             tags=wandb_cfg.get("tags") or [],
             notes=wandb_cfg.get("notes") or None,
-            config={**data_cfg, **model_cfg, **training_cfg},
+            config=cfg,
         )
 
     best_val_loss = float("inf")
