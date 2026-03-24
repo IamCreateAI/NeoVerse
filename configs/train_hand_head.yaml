@@ -26,6 +26,8 @@ model:
   freeze_backbone: true
   # Enable hand prediction head
   enable_hand: true
+  # Hand head type: "hamer" (Hamer-style cross-attention) or "dpt" (dense prediction)
+  hand_head_type: "hamer"
   # Disable other heads
   enable_cam: false
   enable_pts: false
