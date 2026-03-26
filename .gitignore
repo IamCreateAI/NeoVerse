@@ -12,3 +12,5 @@ __pycache__
 *.pt
 *.mp4
 checkpoints/
+P0001_*/
+hand_data/
