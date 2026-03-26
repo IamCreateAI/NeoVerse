@@ -57,6 +57,8 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         self.enable_gs = enable_gs
         self.enable_dynamic_gs_attr = enable_dynamic_gs_attr
         self.enable_hand = kwargs.get("enable_hand", True)
+        self.enable_hand_crop = kwargs.get("enable_hand_crop", False)
+        self.hand_crop_size = kwargs.get("hand_crop_size", 8)
         
         self.life_span_gamma = life_span_gamma
         self.dynamic_threshold = dynamic_threshold
@@ -105,6 +107,8 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
             "enable_norm": self.enable_norm,
             "enable_gs": self.enable_gs,
             "enable_hand": self.enable_hand,
+            "enable_hand_crop": self.enable_hand_crop,
+            "hand_crop_size": self.hand_crop_size,
             "patch_embed": self.patch_embed,
             "sampling_strategy": self.sampling,
             "dpt_checkpoint": self.dpt_checkpoint,
@@ -199,12 +203,22 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
 
         # hand tracking head
         if self.enable_hand:
-            self.hand_head = DPTHead(
-                dim_in=2 * dim,
-                output_dim=64,       # 2 hands * (3 t_xyz + 4 q_wxyz + 15 pose + 10 betas)
-                patch_size=patch_size,
-                activation="linear+none",
-            )
+            if self.enable_hand_crop:
+                from ..heads.hand_crop_head import HandCropHead
+                self.hand_head = HandCropHead(
+                    dim_in=2 * dim,
+                    patch_size=patch_size,
+                    hand_param_dim=32,   # per hand: 3 pos + 4 quat + 15 pose + 10 betas
+                    num_hands=2,
+                    crop_size=self.hand_crop_size,
+                )
+            else:
+                self.hand_head = DPTHead(
+                    dim_in=2 * dim,
+                    output_dim=64,       # 2 hands * (3 t_xyz + 4 q_wxyz + 15 pose + 10 betas)
+                    patch_size=patch_size,
+                    activation="linear+none",
+                )
 
     def forward(self, views: Dict[str, torch.Tensor], cond_flags: List[int]=[0, 0, 0], is_inference=True, use_motion=True):
         """
@@ -281,16 +295,31 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
             preds["pts3d"] = pts
             preds["pts3d_conf"] = pts_conf
 
-        # tracking hand 
+        # tracking hand
         if self.enable_hand:
-            hand_joints, hand_conf = self.hand_head(
-                token_list, 
-                images=imgs, 
-                patch_start_idx=patch_start_idx,
-            )
-            hand_joints = hand_joints.mean(dim=(2, 3))
-            preds["hand_joints"] = hand_joints
-            preds["hand_conf"] = hand_conf
+            hand_bboxes = views.get("hand_bboxes", None)
+            hand_valid = views.get("hand_valid", None)
+
+            if self.enable_hand_crop and hand_bboxes is not None:
+                # ROI-Align path: crop features, predict per hand
+                hand_joints = self.hand_head(
+                    token_list,
+                    images=imgs,
+                    patch_start_idx=patch_start_idx,
+                    hand_bboxes=hand_bboxes,
+                    hand_valid=hand_valid,
+                )
+                preds["hand_joints"] = hand_joints
+            else:
+                # Legacy full-image path: dense prediction + spatial average
+                hand_joints, hand_conf = self.hand_head(
+                    token_list,
+                    images=imgs,
+                    patch_start_idx=patch_start_idx,
+                )
+                hand_joints = hand_joints.mean(dim=(2, 3))
+                preds["hand_joints"] = hand_joints
+                preds["hand_conf"] = hand_conf
             
         # Normal prediction
         if self.enable_norm:

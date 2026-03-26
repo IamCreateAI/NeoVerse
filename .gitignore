@@ -9,3 +9,6 @@ __pycache__
 /wandb
 /checkpoints
 /venv
+*.pt
+*.mp4
+checkpoints/

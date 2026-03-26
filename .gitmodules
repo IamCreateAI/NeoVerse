@@ -1,0 +1,3 @@
+[submodule "models/hamer"]
+	path = models/hamer
+	url = https://github.com/geopavlakos/hamer.git

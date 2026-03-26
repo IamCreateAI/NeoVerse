@@ -1,0 +1,15 @@
+HOT3D Dataset License Agreement
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+Last updated May 29, 2024
+
+Before you access or use the HOT3D Dataset (the "Dataset") made available by Meta Platforms Technologies, LLC ("Meta") please read the following Dataset License Agreement (“Agreement”). By accessing or using the Dataset, you agree to be bound by this Agreement. If you don’t agree to be bound by this Agreement, do not use the Dataset.
+
+The dataset includes 3 data types, each governed by different license terms. You are responsible for complying with all license terms for the specific sequences, annotations, and models utilized by You.
+
+1. Sequence captured by Project Aria and Quest devices, and annotations (excluding hand annotations) ("Sequence data") is licensed under CC BY-SA (https://creativecommons.org/licenses/by-sa/4.0/).
+2. Hand annotations ("Hand data"”") is licensed under CC BY-NC-SA (https://creativecommons.org/licenses/by-nc-sa/4.0/). For example, the files under this license considered “Hand Data” includes but is not limited to: mano_hand_pose_trajectory.jsonl, umetrack_hand_pose_trajectory.jsonl, umetrack_hand_user_profile.json, box2d_hands.csv, mask_hand_pose_available.csv and mask_hand_visible.csv
+3. 3D object models ("Model data") are licensed under a CC BY-SA (https://creativecommons.org/licenses/by-sa/4.0/), with the modification that notwithstanding anything to the contrary, You shall not sell the Licensed Material, or incorporate the Licensed Material into a product to be sold, including for the avoidance of doubt objects or models contained in the Licensed Materials.
+
+The license terms are also visible in the readme of each corresponding download.

@@ -4,7 +4,7 @@
 data:
   # Root folder containing one subdir per sequence. Each sequence must have
   # video_main_rgb.mp4 and hand_data/mano_hand_pose_trajectory.jsonl
-  data_root: "data/hot3d_aria/sequences"
+  data_root: "/home/user/dmonopoli/data/hot3d_aria/sequences"
   # Number of frames per clip (sliding window over video). Full video is too long to fit in memory.
   num_frames: 16
   # [height, width] to which video frames are resized
@@ -21,7 +21,7 @@ data:
 # ------------------------------------------------------------------
 model:
   # Path to pretrained WorldMirror / reconstructor checkpoint
-  checkpoint: "models/NeoVerse/reconstructor.ckpt"
+  checkpoint: "/home/user/dmonopoli/FF-4DGS-Ego/models/NeoVerse/reconstructor.ckpt"
   # Freeze backbone; only hand head is trained
   freeze_backbone: true
   # Enable hand prediction head
@@ -47,14 +47,14 @@ training:
   val_every: 250         # Steps between validation runs
   save_every: 1000       # Steps between checkpoint saves
   seed: 42               # Random seed
-  output_dir: "checkpoints/overfit_1_frame"
+  output_dir: "checkpoints/full_training"
 
 # ------------------------------------------------------------------
 # Visualization
 # ------------------------------------------------------------------
 visualization:
   # Folder containing MANO_LEFT.pkl and MANO_RIGHT.pkl for hand mesh rendering
-  mano_model_folder: "models/MANO"
+  mano_model_folder: "/home/user/dmonopoli/FF-4DGS-Ego/models/MANO"
   # Number of sample frames to render as hand overlays (GT vs pred) in W&B
   num_vis_frames: 4
 
@@ -64,7 +64,7 @@ visualization:
 debug:
   enabled: false         # When true, apply max_sequences limit to limit the number of sequences used for training
   max_sequences: 1       # Use only this many sequences (from data_root)
-  single_frame: true     # Overfit on a single clip from first sequence; disables validation
+  single_frame: false    # Overfit on a single clip from first sequence; disables validation
 
 # ------------------------------------------------------------------
 # Weights & Biases
