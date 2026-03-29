@@ -33,67 +33,6 @@ NUM_HANDS = 2
 # Bounding-box utilities
 # ------------------------------------------------------------------
 
-def compute_hand_bboxes_from_mano(
-    gt_params: torch.Tensor,
-    image_size: tuple,
-    focal_length: float = None,
-    base_margin: float = 0.15,
-    ref_depth: float = 0.5,
-) -> tuple:
-    """Compute depth-adaptive 2D bounding boxes from MANO wrist positions.
-
-    Projects the wrist translation with a pinhole camera model and creates
-    a bounding box whose margin shrinks with depth (far hands are smaller).
-
-    Args:
-        gt_params:    ``[S, 64]`` MANO params (2 hands x 32).
-        image_size:   ``(H, W)`` of the input frame.
-        focal_length: Camera focal length in pixels.  If *None*, defaults to
-                      ``H`` (a rough but usable approximation for Aria
-                      egocentric cameras at 224 px resolution).
-        base_margin:  Half-width of the bbox (normalised [0, 1]) at the
-                      reference depth ``ref_depth``.
-        ref_depth:    The depth (in metres) at which ``base_margin`` applies.
-                      Margin at other depths is ``base_margin * ref_depth / z``.
-
-    Returns:
-        bboxes: ``[S, 2, 4]`` normalised bounding boxes ``(x1, y1, x2, y2)``.
-        valid:  ``[S, 2]`` boolean mask (True when the hand is present).
-    """
-    H, W = image_size
-    S = gt_params.shape[0]
-    if focal_length is None:
-        focal_length = float(H)
-
-    bboxes = torch.zeros(S, NUM_HANDS, 4)
-    valid = torch.zeros(S, NUM_HANDS, dtype=torch.bool)
-
-    for hand_idx in range(NUM_HANDS):
-        offset = hand_idx * HAND_PARAM_DIM
-        t_xyz = gt_params[:, offset : offset + 3]              # [S, 3]
-
-        hand_present = t_xyz.abs().sum(dim=-1) > 1e-6          # [S]
-        valid[:, hand_idx] = hand_present
-
-        # Perspective projection:  u = f·X/Z + cx,  v = f·Y/Z + cy
-        z = t_xyz[:, 2].clamp(min=0.1)
-        u_norm = (focal_length * t_xyz[:, 0] / z + W / 2.0) / W
-        v_norm = (focal_length * t_xyz[:, 1] / z + H / 2.0) / H
-
-        # Depth-adaptive margin: hands further away → smaller bbox
-        margin = (base_margin * ref_depth / z).clamp(min=0.05, max=0.45)
-
-        bboxes[:, hand_idx, 0] = (u_norm - margin).clamp(0.0, 1.0)
-        bboxes[:, hand_idx, 1] = (v_norm - margin).clamp(0.0, 1.0)
-        bboxes[:, hand_idx, 2] = (u_norm + margin).clamp(0.0, 1.0)
-        bboxes[:, hand_idx, 3] = (v_norm + margin).clamp(0.0, 1.0)
-
-        # For absent hands, place a safe default bbox at image centre so
-        # ROI Align produces valid (but zeroed-out) features.
-        absent = ~hand_present
-        bboxes[absent, hand_idx, :] = torch.tensor([0.25, 0.25, 0.75, 0.75])
-
-    return bboxes, valid
 
 
 def default_full_image_bboxes(num_frames: int) -> tuple:
@@ -116,11 +55,10 @@ class HOT3DHandDataset(Dataset):
     """Sliding-window clips over a list of sequences."""
 
     def __init__(self, seq_dirs, num_frames=16, res=(224, 224), clip_stride=None,
-                 use_hand_crop=False, bbox_focal_length=None, bbox_margin=0.15):
+                 use_hand_crop=False, bbox_margin=0.15):
         self.num_frames = num_frames
         self.res = res
         self.use_hand_crop = use_hand_crop
-        self.bbox_focal_length = bbox_focal_length
         self.bbox_margin = bbox_margin
         self.clips = []
 
@@ -184,13 +122,27 @@ class HOT3DHandDataset(Dataset):
                 ts = _closest_ts(frame_i)
                 gt_per_frame.append(_hand_to_vec(hand_entries[ts]))
 
+            if self.use_hand_crop:
+                bbox_frames, valid_frames = HOT3DHandDataset._compute_projected_bboxes(
+                    seq_path, n_video, hand_ts_sorted, gt_per_frame, self.bbox_margin,
+                )
+                if bbox_frames is None:
+                    print(f"Skipping {seq_path}: missing calibration for hand crop")
+                    continue
+            else:
+                bbox_frames = valid_frames = None
+
             for start in range(0, n_video - num_frames + 1, clip_stride):
-                self.clips.append({
+                clip = {
                     "video_path":   video_path,
                     "gt_frames":    gt_per_frame[start : start + num_frames],
                     "frame_offset": start,
                     "seq_path":     seq_path,
-                })
+                }
+                if self.use_hand_crop:
+                    clip["hand_bboxes"] = bbox_frames[start : start + num_frames]
+                    clip["hand_valid"]  = valid_frames[start : start + num_frames]
+                self.clips.append(clip)
 
     def __len__(self):
         return len(self.clips)
@@ -210,15 +162,100 @@ class HOT3DHandDataset(Dataset):
         out = {"img": imgs, "gt": gt}
 
         if self.use_hand_crop:
-            bboxes, valid = compute_hand_bboxes_from_mano(
-                gt, self.res,
-                focal_length=self.bbox_focal_length,
-                margin=self.bbox_margin,
-            )
-            out["hand_bboxes"] = bboxes   # [S, 2, 4]
-            out["hand_valid"] = valid     # [S, 2]
+            out["hand_bboxes"] = torch.stack(clip["hand_bboxes"])  # [S, 2, 4]
+            out["hand_valid"]  = torch.stack(clip["hand_valid"])   # [S, 2]
 
         return out
+
+    @staticmethod
+    def _compute_projected_bboxes(seq_path, n_video, hand_ts_sorted, gt_per_frame,
+                                   base_margin=0.15, ref_depth=0.5):
+        """Compute per-frame hand bboxes using the real fisheye camera model.
+
+        Projects each wrist position from world frame through the headset pose
+        and fisheye camera calibration, matching the projection used in hand_vis_utils.
+
+        Returns lists of [2, 4] bbox tensors and [2] bool valid tensors,
+        or (None, None) if calibration files are missing.
+        """
+        import numpy as np
+        from projectaria_tools.core.sophus import SE3
+        from scripts.hand_vis_utils import (
+            load_camera_calibration, load_headset_trajectory, find_closest,
+        )
+
+        calib_path  = os.path.join(seq_path, "mps_slam_calibration", "online_calibration.jsonl")
+        headset_path = os.path.join(seq_path, "ground_truth", "headset_trajectory.csv")
+        if not os.path.exists(calib_path) or not os.path.exists(headset_path):
+            return None, None
+
+        T_device_camera, cam_calib = load_camera_calibration(calib_path)
+        headset_poses = load_headset_trajectory(headset_path)
+        headset_ts    = sorted(headset_poses.keys())
+
+        ts_start, ts_end = hand_ts_sorted[0], hand_ts_sorted[-1]
+        IMAGE_WIDTH = 1408  # Aria sensor resolution before resize
+
+        bboxes_list = []
+        valid_list  = []
+
+        for frame_i, gt in enumerate(gt_per_frame):
+            # Same timecode mapping as hand_vis_utils._frame_to_timecode
+            frac     = frame_i / max(n_video - 1, 1)
+            query_tc = int(ts_start + frac * (ts_end - ts_start))
+
+            closest_ht  = find_closest(headset_ts, query_tc)
+            t_wd, q_wd  = headset_poses[closest_ht]
+            T_world_device = SE3.from_quat_and_translation(q_wd[0], q_wd[1:], t_wd)[0]
+            T_camera_world = (
+                T_device_camera.inverse().to_matrix()
+                @ T_world_device.inverse().to_matrix()
+            )
+
+            frame_bboxes = torch.zeros(NUM_HANDS, 4)
+            frame_valid  = torch.zeros(NUM_HANDS, dtype=torch.bool)
+
+            for hand_idx in range(NUM_HANDS):
+                offset = hand_idx * HAND_PARAM_DIM
+                t_xyz  = gt[offset : offset + 3].numpy()
+
+                if np.abs(t_xyz).sum() < 1e-6:
+                    # Hand absent: safe fallback bbox so ROI Align doesn't crash
+                    frame_bboxes[hand_idx] = torch.tensor([0.25, 0.25, 0.75, 0.75])
+                    continue
+
+                # Transform wrist from world to camera frame
+                p_cam = (T_camera_world @ np.append(t_xyz, 1.0))[:3]
+
+                if p_cam[2] <= 0.01:
+                    frame_bboxes[hand_idx] = torch.tensor([0.25, 0.25, 0.75, 0.75])
+                    continue
+
+                # Project through fisheye camera model
+                p_2d = cam_calib.project(p_cam)
+                if p_2d is None:
+                    frame_bboxes[hand_idx] = torch.tensor([0.25, 0.25, 0.75, 0.75])
+                    continue
+
+                # 90° CW rotation to match MP4 video orientation (same as project_vertices)
+                u_norm = ((IMAGE_WIDTH - 1) - p_2d[1]) / IMAGE_WIDTH
+                v_norm = p_2d[0] / IMAGE_WIDTH
+
+                # Depth-adaptive margin
+                margin = float(np.clip(base_margin * ref_depth / p_cam[2], 0.05, 0.45))
+
+                frame_bboxes[hand_idx] = torch.tensor([
+                    max(0.0, min(1.0, u_norm - margin)),
+                    max(0.0, min(1.0, v_norm - margin)),
+                    max(0.0, min(1.0, u_norm + margin)),
+                    max(0.0, min(1.0, v_norm + margin)),
+                ])
+                frame_valid[hand_idx] = True
+
+            bboxes_list.append(frame_bboxes)
+            valid_list.append(frame_valid)
+
+        return bboxes_list, valid_list
 
 
 def discover_sequences(data_root):
@@ -415,15 +452,12 @@ def train():
     num_workers      = data_cfg.get("num_workers", 4)
 
     # Hand-crop dataset options (mirror the model flag)
-    use_hand_crop    = model_cfg.get("hand_head_type", "hamer") == "hand_crop"
-    crop_cfg         = cfg.get("hand_crop", {})
-    bbox_focal       = crop_cfg.get("focal_length", None)
-    bbox_margin      = crop_cfg.get("bbox_margin", 0.15)
+    use_hand_crop = model_cfg.get("hand_head_type") == "hand_crop" or model_cfg.get("use_hand_crop", False)
+    bbox_margin   = cfg.get("hand_crop", {}).get("bbox_margin", 0.15)
 
     ds_kwargs = dict(
         num_frames=num_frames, res=res, clip_stride=clip_stride,
-        use_hand_crop=use_hand_crop,
-        bbox_focal_length=bbox_focal, bbox_margin=bbox_margin,
+        use_hand_crop=use_hand_crop, bbox_margin=bbox_margin,
     )
 
     if debug_cfg.get("single_frame", False):

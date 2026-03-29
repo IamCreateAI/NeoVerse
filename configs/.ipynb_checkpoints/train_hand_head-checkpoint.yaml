@@ -1,0 +1,84 @@
+# ------------------------------------------------------------------
+# Data
+# ------------------------------------------------------------------
+data:
+  # Root folder containing one subdir per sequence. Each sequence must have
+  # video_main_rgb.mp4 and hand_data/mano_hand_pose_trajectory.jsonl
+  data_root: "/home/user/dmonopoli/data/hot3d_aria/sequences"
+  # Number of frames per clip (sliding window over video). Full video is too long to fit in memory.
+  num_frames: 16
+  # [height, width] to which video frames are resized
+  resolution: [224, 224]
+  # Step between consecutive clips when sliding over a video (stride=num_frames -> non-overlapping)
+  clip_stride: 8
+  # Fraction of sequences used for validation (0.0 = no validation; 0.1 = 10% held out)
+  val_split: 0.05
+  # DataLoader workers for loading video clips
+  num_workers: 4
+
+# ------------------------------------------------------------------
+# Model
+# ------------------------------------------------------------------
+model:
+  # Path to pretrained WorldMirror / reconstructor checkpoint
+  checkpoint: "/home/user/dmonopoli/FF-4DGS-Ego/models/NeoVerse/reconstructor.ckpt"
+  # Freeze backbone; only hand head is trained
+  freeze_backbone: true
+  # Enable hand prediction head
+  enable_hand: true
+  # Disable other heads
+  enable_cam: false
+  enable_pts: false
+  enable_depth: false
+  enable_norm: false
+  enable_motion: false
+  enable_gs: false
+
+# ------------------------------------------------------------------
+# Training
+# ------------------------------------------------------------------
+training:
+  lr: 1e-4
+  min_lr: 1e-7           # Minimum LR for cosine annealing scheduler
+  epochs: 1
+  batch_size: 1
+  grad_accum_steps: 4    # Effective batch = batch_size * grad_accum_steps
+  log_every: 250         # Steps between train loss logs (console + W&B)
+  val_every: 250         # Steps between validation runs
+  save_every: 1000       # Steps between checkpoint saves
+  seed: 42               # Random seed
+  output_dir: "checkpoints/full_training"
+
+# ------------------------------------------------------------------
+# Visualization
+# ------------------------------------------------------------------
+visualization:
+  # Folder containing MANO_LEFT.pkl and MANO_RIGHT.pkl for hand mesh rendering
+  mano_model_folder: "/home/user/dmonopoli/FF-4DGS-Ego/models/MANO"
+  # Number of sample frames to render as hand overlays (GT vs pred) in W&B
+  num_vis_frames: 4
+
+# ------------------------------------------------------------------
+# Debug
+# ------------------------------------------------------------------
+debug:
+  enabled: false         # When true, apply max_sequences limit to limit the number of sequences used for training
+  max_sequences: 1       # Use only this many sequences (from data_root)
+  single_frame: false    # Overfit on a single clip from first sequence; disables validation
+
+# ------------------------------------------------------------------
+# Weights & Biases
+# ------------------------------------------------------------------
+wandb:
+  enabled: true
+  project: "hand-head-training"
+  entity: 3DV-Project
+  run_name: "Full Dataset"
+  tags: []
+  notes: null
+
+# ------------------------------------------------------------------
+# Hand Crop Settings
+# ------------------------------------------------------------------
+hand_crop:
+  bbox_margin: 0.15

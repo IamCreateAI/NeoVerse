@@ -59,6 +59,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         self.enable_dynamic_gs_attr = enable_dynamic_gs_attr
         self.enable_hand = kwargs.get("enable_hand", True)
         self.hand_head_type = kwargs.get("hand_head_type", "hamer")
+        self.use_hand_crop = kwargs.get("use_hand_crop", False)
         self.hand_crop_size = kwargs.get("hand_crop_size", 8)
 
         self.life_span_gamma = life_span_gamma
@@ -109,6 +110,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
             "enable_gs": self.enable_gs,
             "enable_hand": self.enable_hand,
             "hand_head_type": self.hand_head_type,
+            "use_hand_crop": self.use_hand_crop,
             "hand_crop_size": self.hand_crop_size,
             "patch_embed": self.patch_embed,
             "sampling_strategy": self.sampling,
@@ -207,7 +209,10 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
             if self.hand_head_type == "hamer":
                 self.hand_head = HamerManoHead(
                     context_dim=2 * dim,
-                )  # Output is [B, S, 2 * (10 + 22)]
+                    use_crop=self.use_hand_crop,
+                    crop_size=self.hand_crop_size,
+                    patch_size=patch_size,
+                )
             elif self.hand_head_type == "hand_crop":
                 from ..heads.hand_crop_head import HandCropHead
                 self.hand_head = HandCropHead(
@@ -305,12 +310,17 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         # tracking hand
         if self.enable_hand:
             if self.hand_head_type == "hamer":
+                hamer_kwargs = {}
+                if self.use_hand_crop:
+                    hamer_kwargs["hand_bboxes"] = views.get("hand_bboxes")
+                    hamer_kwargs["hand_valid"] = views.get("hand_valid")
                 hand_params, hand_conf = self.hand_head(
                     token_list,
                     images=imgs,
                     patch_start_idx=patch_start_idx,
+                    **hamer_kwargs,
                 )
-                preds["hand_joints"] = hand_params  # [B, S, 2 * (10 + 22)]
+                preds["hand_joints"] = hand_params
                 preds["hand_conf"] = hand_conf
             elif self.hand_head_type == "hand_crop":
                 hand_bboxes = views.get("hand_bboxes", None)
