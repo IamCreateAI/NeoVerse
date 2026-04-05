@@ -55,17 +55,17 @@ class HOT3DHandDataset(Dataset):
     """Sliding-window clips over a list of sequences."""
 
     def __init__(self, seq_dirs, num_frames=16, res=(224, 224), clip_stride=None,
-                 use_hand_crop=False, bbox_margin=0.15):
+                 use_hand_crop=False, rescale_factor=2.0):
         self.num_frames = num_frames
         self.res = res
         self.use_hand_crop = use_hand_crop
-        self.bbox_margin = bbox_margin
+        self.rescale_factor = rescale_factor
         self.clips = []
 
         if clip_stride is None:
             clip_stride = num_frames
 
-        for seq_path in seq_dirs:
+        for seq_path in tqdm(seq_dirs):
             video_path = os.path.join(seq_path, "video_main_rgb.mp4")
             jsonl_path = os.path.join(seq_path, "hand_data/mano_hand_pose_trajectory.jsonl")
 
@@ -124,7 +124,8 @@ class HOT3DHandDataset(Dataset):
 
             if self.use_hand_crop:
                 bbox_frames, valid_frames = HOT3DHandDataset._compute_projected_bboxes(
-                    seq_path, n_video, hand_ts_sorted, gt_per_frame, self.bbox_margin,
+                    seq_path, n_video, hand_ts_sorted, gt_per_frame,
+                    rescale_factor=self.rescale_factor,
                 )
                 if bbox_frames is None:
                     print(f"Skipping {seq_path}: missing calibration for hand crop")
@@ -169,29 +170,56 @@ class HOT3DHandDataset(Dataset):
 
     @staticmethod
     def _compute_projected_bboxes(seq_path, n_video, hand_ts_sorted, gt_per_frame,
-                                   base_margin=0.15, ref_depth=0.5):
-        """Compute per-frame hand bboxes using the real fisheye camera model.
+                                   rescale_factor=2.0, **_kwargs):
+        """Compute per-frame hand bboxes by projecting the full MANO mesh.
 
-        Projects each wrist position from world frame through the headset pose
-        and fisheye camera calibration, matching the projection used in hand_vis_utils.
+        Follows the same approach as HaMeR's hand detection pipeline:
+        1. Project all hand mesh vertices to 2D (like HaMeR uses ViTPose keypoints)
+        2. Compute a tight bounding box around all valid projected vertices
+        3. Apply a rescale factor to pad the box (HaMeR default: 2.0x)
 
-        Returns lists of [2, 4] bbox tensors and [2] bool valid tensors,
-        or (None, None) if calibration files are missing.
+        This produces bboxes that tightly enclose the visible hand and are
+        centered on the hand (not just the wrist), matching HaMeR's ViTPose
+        keypoint-based bbox extraction.
+
+        Returns lists of [2, 4] bbox tensors (normalised x1,y1,x2,y2 in [0,1])
+        and [2] bool valid tensors, or (None, None) if calibration files are missing.
         """
         import numpy as np
         from projectaria_tools.core.sophus import SE3
         from scripts.hand_vis_utils import (
             load_camera_calibration, load_headset_trajectory, find_closest,
+            load_hand_poses, MANOModel, project_vertices,
         )
 
-        calib_path  = os.path.join(seq_path, "mps_slam_calibration", "online_calibration.jsonl")
+        calib_path   = os.path.join(seq_path, "mps_slam_calibration", "online_calibration.jsonl")
         headset_path = os.path.join(seq_path, "ground_truth", "headset_trajectory.csv")
-        if not os.path.exists(calib_path) or not os.path.exists(headset_path):
+        jsonl_path   = os.path.join(seq_path, "hand_data", "mano_hand_pose_trajectory.jsonl")
+        mano_folder  = os.path.join(os.path.dirname(os.path.dirname(seq_path)),
+                                     "models", "MANO")
+
+        # Also accept mano_folder from the repo root (common layout)
+        if not os.path.exists(mano_folder):
+            # Try relative to the FF-4DGS-Ego repo root
+            repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            mano_folder = os.path.join(repo_root, "models", "MANO")
+
+        for p in [calib_path, headset_path, jsonl_path]:
+            if not os.path.exists(p):
+                return None, None
+        if not os.path.exists(mano_folder):
+            print(f"[WARN] MANO model folder not found at {mano_folder}, "
+                  "cannot compute mesh-based bboxes")
             return None, None
 
         T_device_camera, cam_calib = load_camera_calibration(calib_path)
         headset_poses = load_headset_trajectory(headset_path)
         headset_ts    = sorted(headset_poses.keys())
+
+        hand_poses_data = load_hand_poses(jsonl_path)
+        hand_ts_data    = sorted(hand_poses_data.keys())
+
+        mano_model = MANOModel(mano_folder)
 
         ts_start, ts_end = hand_ts_sorted[0], hand_ts_sorted[-1]
         IMAGE_WIDTH = 1408  # Aria sensor resolution before resize
@@ -199,58 +227,90 @@ class HOT3DHandDataset(Dataset):
         bboxes_list = []
         valid_list  = []
 
-        for frame_i, gt in enumerate(gt_per_frame):
-            # Same timecode mapping as hand_vis_utils._frame_to_timecode
+        for frame_i in range(len(gt_per_frame)):
             frac     = frame_i / max(n_video - 1, 1)
             query_tc = int(ts_start + frac * (ts_end - ts_start))
 
-            closest_ht  = find_closest(headset_ts, query_tc)
-            t_wd, q_wd  = headset_poses[closest_ht]
+            # Find closest headset pose
+            closest_ht = find_closest(headset_ts, query_tc)
+            t_wd, q_wd = headset_poses[closest_ht]
             T_world_device = SE3.from_quat_and_translation(q_wd[0], q_wd[1:], t_wd)[0]
-            T_camera_world = (
-                T_device_camera.inverse().to_matrix()
-                @ T_world_device.inverse().to_matrix()
-            )
+
+            # Find closest hand pose entry (raw JSONL data with full MANO params)
+            closest_hand_ts = find_closest(hand_ts_data, query_tc)
+            hand_data = hand_poses_data[closest_hand_ts]
 
             frame_bboxes = torch.zeros(NUM_HANDS, 4)
             frame_valid  = torch.zeros(NUM_HANDS, dtype=torch.bool)
 
             for hand_idx in range(NUM_HANDS):
-                offset = hand_idx * HAND_PARAM_DIM
-                t_xyz  = gt[offset : offset + 3].numpy()
+                hand_key = str(hand_idx)  # "0" = left, "1" = right
+                is_right = hand_idx == 1
 
-                if np.abs(t_xyz).sum() < 1e-6:
-                    # Hand absent: safe fallback bbox so ROI Align doesn't crash
+                if hand_key not in hand_data or not hand_data[hand_key]:
+                    # Hand absent: safe fallback bbox
                     frame_bboxes[hand_idx] = torch.tensor([0.25, 0.25, 0.75, 0.75])
                     continue
 
-                # Transform wrist from world to camera frame
-                p_cam = (T_camera_world @ np.append(t_xyz, 1.0))[:3]
+                try:
+                    # Generate full MANO mesh in world coordinates
+                    vertices, _faces = mano_model.get_mesh(hand_data[hand_key], is_right)
 
-                if p_cam[2] <= 0.01:
+                    # Project all 778 vertices to 2D using the same projection
+                    # as hand_vis_utils (fisheye + 90° rotation)
+                    pixels, depths, valid_mask = project_vertices(
+                        vertices, T_world_device, T_device_camera, cam_calib,
+                        image_width=IMAGE_WIDTH,
+                    )
+
+                    if valid_mask.sum() < 10:
+                        frame_bboxes[hand_idx] = torch.tensor([0.25, 0.25, 0.75, 0.75])
+                        continue
+
+                    # Tight bbox around all valid projected vertices (in pixels)
+                    valid_pixels = pixels[valid_mask]  # [N_valid, 2] — (u, v) in pixel coords
+                    u_min, v_min = valid_pixels.min(axis=0)
+                    u_max, v_max = valid_pixels.max(axis=0)
+
+                    # Compute center and size (Hamer-style: center + scale)
+                    center_u = (u_min + u_max) / 2.0
+                    center_v = (v_min + v_max) / 2.0
+                    bbox_w = u_max - u_min
+                    bbox_h = v_max - v_min
+
+                    # Apply rescale factor (Hamer default = 2.0) to pad the bbox
+                    # This matches HaMeR's ViTDetDataset: scale = rescale_factor * (box_size) / 200
+                    # but we directly expand the bbox by the factor
+                    bbox_w *= rescale_factor
+                    bbox_h *= rescale_factor
+
+                    # Make square (take max side, like Hamer's expand_to_aspect_ratio)
+                    bbox_size = max(bbox_w, bbox_h)
+
+                    # Convert to normalised [0,1] coords (x1, y1, x2, y2)
+                    x1 = (center_u - bbox_size / 2.0) / IMAGE_WIDTH
+                    y1 = (center_v - bbox_size / 2.0) / IMAGE_WIDTH
+                    x2 = (center_u + bbox_size / 2.0) / IMAGE_WIDTH
+                    y2 = (center_v + bbox_size / 2.0) / IMAGE_WIDTH
+
+                    # Clamp to [0, 1]
+                    x1 = max(0.0, min(1.0, x1))
+                    y1 = max(0.0, min(1.0, y1))
+                    x2 = max(0.0, min(1.0, x2))
+                    y2 = max(0.0, min(1.0, y2))
+
+                    # Sanity check: box must have positive area
+                    if x2 - x1 < 0.01 or y2 - y1 < 0.01:
+                        frame_bboxes[hand_idx] = torch.tensor([0.25, 0.25, 0.75, 0.75])
+                        continue
+
+                    frame_bboxes[hand_idx] = torch.tensor([x1, y1, x2, y2])
+                    frame_valid[hand_idx] = True
+
+                except Exception as e:
+                    # Fallback on MANO mesh generation failure
                     frame_bboxes[hand_idx] = torch.tensor([0.25, 0.25, 0.75, 0.75])
                     continue
-
-                # Project through fisheye camera model
-                p_2d = cam_calib.project(p_cam)
-                if p_2d is None:
-                    frame_bboxes[hand_idx] = torch.tensor([0.25, 0.25, 0.75, 0.75])
-                    continue
-
-                # 90° CW rotation to match MP4 video orientation (same as project_vertices)
-                u_norm = ((IMAGE_WIDTH - 1) - p_2d[1]) / IMAGE_WIDTH
-                v_norm = p_2d[0] / IMAGE_WIDTH
-
-                # Depth-adaptive margin
-                margin = float(np.clip(base_margin * ref_depth / p_cam[2], 0.05, 0.45))
-
-                frame_bboxes[hand_idx] = torch.tensor([
-                    max(0.0, min(1.0, u_norm - margin)),
-                    max(0.0, min(1.0, v_norm - margin)),
-                    max(0.0, min(1.0, u_norm + margin)),
-                    max(0.0, min(1.0, v_norm + margin)),
-                ])
-                frame_valid[hand_idx] = True
 
             bboxes_list.append(frame_bboxes)
             valid_list.append(frame_valid)
@@ -453,11 +513,11 @@ def train():
 
     # Hand-crop dataset options (mirror the model flag)
     use_hand_crop = model_cfg.get("hand_head_type") == "hand_crop" or model_cfg.get("use_hand_crop", False)
-    bbox_margin   = cfg.get("hand_crop", {}).get("bbox_margin", 0.15)
+    rescale_factor = cfg.get("hand_crop", {}).get("rescale_factor", 2.0)
 
     ds_kwargs = dict(
         num_frames=num_frames, res=res, clip_stride=clip_stride,
-        use_hand_crop=use_hand_crop, bbox_margin=bbox_margin,
+        use_hand_crop=use_hand_crop, rescale_factor=rescale_factor,
     )
 
     if debug_cfg.get("single_frame", False):
