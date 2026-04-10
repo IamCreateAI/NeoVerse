@@ -113,6 +113,7 @@ class HamerManoHead(nn.Module):
         use_crop=False,
         crop_size=8,
         patch_size=14,
+        crop_global_depth=1,
     ):
         super().__init__()
         self.use_crop = use_crop
@@ -122,9 +123,23 @@ class HamerManoHead(nn.Module):
         self.context_norm = nn.LayerNorm(context_dim)
         self.context_proj = nn.Linear(context_dim, dim)
 
+        # Geometry injection: project per-hand bbox geometry [cx, cy, w, h] into query space
+        self.geom_proj = nn.Linear(4, dim)
+
         # Two learned query tokens: one for left hand, one for right hand.
         # Note: Original HaMeR only predicts right hands and mirrors to predict left hand
         self.query_tokens = nn.Parameter(torch.randn(1, 2, dim))
+
+        # Crop ↔ full-image fusion: enriches the cropped tokens with global
+        # context before they are used as keys/values for the query tokens.
+        # Q = cropped tokens (per hand), K/V = full-image patch tokens.
+        # Reuses the same TransformerCrossAttn block as the query path so the
+        # architecture stays consistent.
+        if use_crop:
+            self.crop_to_global = TransformerCrossAttn(
+                dim, crop_global_depth, heads, dim_head, mlp_dim,
+                dropout=dropout, context_dim=dim,
+            )
 
         self.transformer = TransformerCrossAttn(
             dim, depth, heads, dim_head, mlp_dim, dropout=dropout, context_dim=dim,
@@ -184,16 +199,45 @@ class HamerManoHead(nn.Module):
 
             # Flatten spatial dims back to token sequence
             cropped_tokens = cropped.flatten(2).permute(0, 2, 1)  # [N*2, crop_size^2, C]
-            context = self.context_proj(self.context_norm(cropped_tokens))
+            crop_ctx = self.context_proj(self.context_norm(cropped_tokens))  # [N*2, crop^2, dim]
 
-            # One query per hand, each attending to its own cropped context
-            left_q = self.query_tokens[:, 0:1, :].expand(N, -1, -1)   # [N, 1, dim]
-            right_q = self.query_tokens[:, 1:2, :].expand(N, -1, -1)  # [N, 1, dim]
-            queries = torch.stack([left_q, right_q], dim=1).reshape(N * 2, 1, -1)  # [N*2, 1, dim]
+            # Zero out crop features for invalid (absent) hands so that
+            # fallback bboxes don't generate noisy gradients through the
+            # shared transformer weights.
+            if hand_valid is not None:
+                crop_valid = hand_valid.reshape(N * 2, 1, 1).float()
+                crop_ctx = crop_ctx * crop_valid
 
-            out = self.transformer(queries, context=context)  # [N*2, 1, dim]
+            # Project full-image tokens with the same norm/proj and replicate
+            # per hand so the crop tokens can cross-attend to global context.
+            global_ctx = self.context_proj(self.context_norm(tokens))  # [N, N_patches, dim]
+            global_ctx = global_ctx.repeat_interleave(2, dim=0)        # [N*2, N_patches, dim]
+
+            # Crop tokens (Q) ← full-image tokens (K/V): inject global context
+            # into the local crop features.
+            context = self.crop_to_global(crop_ctx, context=global_ctx)  # [N*2, crop^2, dim]
+
+            # Reshape from [N*2, crop^2, dim] → [N, 2*crop^2, dim] so both
+            # hands' crop features are concatenated.  This lets the query
+            # tokens self-attend across hands (bilateral reasoning) instead
+            # of being processed in isolation.
+            context = context.reshape(N, 2 * self.crop_size * self.crop_size, -1)  # [N, 2*crop^2, dim]
+
+            # Two query tokens kept together: [N, 2, dim]
+            queries = self.query_tokens.expand(N, -1, -1)  # [N, 2, dim]
+
+            # Geometry injection: encode normalized bbox (cx, cy, w, h) per hand and add to queries
+            bboxes_norm = hand_bboxes.reshape(N, 2, 4)  # [N, 2, 4] — [x1, y1, x2, y2] in [0, 1]
+            cx = (bboxes_norm[..., 0] + bboxes_norm[..., 2]) * 0.5
+            cy = (bboxes_norm[..., 1] + bboxes_norm[..., 3]) * 0.5
+            bw = bboxes_norm[..., 2] - bboxes_norm[..., 0]
+            bh = bboxes_norm[..., 3] - bboxes_norm[..., 1]
+            geom = torch.stack([cx, cy, bw, bh], dim=-1)  # [N, 2, 4]
+            geom_emb = self.geom_proj(geom)  # [N, 2, dim]
+            queries = queries + geom_emb
+
+            out = self.transformer(queries, context=context)  # [N, 2, dim]
             out = self.output_norm(out)
-            out = out.reshape(N, 2, -1)  # [N, 2, dim]
         else:
             # --- Original full-image path (unchanged) ---
             context = self.context_proj(self.context_norm(tokens))  # [N, N_patches, dim]

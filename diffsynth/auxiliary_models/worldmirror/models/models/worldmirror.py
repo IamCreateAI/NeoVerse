@@ -213,15 +213,6 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
                     crop_size=self.hand_crop_size,
                     patch_size=patch_size,
                 )
-            elif self.hand_head_type == "hand_crop":
-                from ..heads.hand_crop_head import HandCropHead
-                self.hand_head = HandCropHead(
-                    dim_in=2 * dim,
-                    patch_size=patch_size,
-                    hand_param_dim=32,   # per hand: 3 pos + 4 quat + 15 pose + 10 betas
-                    num_hands=2,
-                    crop_size=self.hand_crop_size,
-                )
             elif self.hand_head_type == "dpt":
                 self.hand_head = DPTHead(
                     dim_in=2 * dim,

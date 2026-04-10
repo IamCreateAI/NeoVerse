@@ -332,23 +332,19 @@ class HOT3DHandDataset(Dataset):
     @staticmethod
     def _transform_gt_to_crop_local(seq_path, n_video, hand_ts_sorted, gt_per_frame,
                                      bbox_frames, valid_frames, res=(224, 224)):
-        """Transform GT wrist position and orientation from world space to crop-local frame.
+        """Transform GT wrist position and orientation from world space to camera frame.
 
-        The network predicts (z, tx_crop, ty_crop) in the crop-local frame,
-        where tx_crop and ty_crop are normalised offsets from the crop centre.
-        This method converts GT to match that frame so the MSE loss compares
-        like with like.
+        The HaMeR cross-attention head regresses MANO parameters in camera space
+        (matching original HaMeR semantics). The crop is provided to the head
+        spatially via ROI Align + bbox geometry injection — there is no
+        crop-local decoder, so we must NOT project the GT translation into a
+        crop-local frame. Doing so previously combined a pinhole approximation
+        with fisheye-projected bboxes and produced GT values inconsistent with
+        anything the head could learn (loss ~300k).
 
         Steps per frame per hand:
-            1. world → camera:  t_cam = R_cw @ t_world + t_cw
-            2. camera → crop-local (inverse pinhole + bbox geometry):
-                u_pixel = t_x * f / z + W/2
-                v_pixel = t_y * f / z + H/2
-                tx_crop = 2 * (u_pixel - bbox_cx) / bbox_w
-                ty_crop = 2 * (v_pixel - bbox_cy) / bbox_h
-                z       = t_z
-
-        Orientation is transformed to camera frame (world → camera).
+            1. world → camera position:    t_cam = R_cw @ t_world + t_cw
+            2. world → camera orientation: R_cam = R_cw @ R_world
 
         Modifies gt_per_frame in-place.
         Returns True on success, False if calibration files are missing.
@@ -370,9 +366,6 @@ class HOT3DHandDataset(Dataset):
         headset_poses = load_headset_trajectory(headset_path)
         headset_ts = sorted(headset_poses.keys())
 
-        H, W = res
-        focal_length = float(H)  # default approximation matching HandCropHead
-
         ts_start, ts_end = hand_ts_sorted[0], hand_ts_sorted[-1]
 
         for frame_i in range(len(gt_per_frame)):
@@ -393,8 +386,6 @@ class HOT3DHandDataset(Dataset):
             t_cw = T_camera_world[:3, 3]
 
             gt_vec = gt_per_frame[frame_i]  # [64] = 2 hands x 32
-            frame_bboxes = bbox_frames[frame_i]   # [2, 4] normalised (x1,y1,x2,y2)
-            frame_valid  = valid_frames[frame_i]   # [2] bool
 
             for hand_idx in range(NUM_HANDS):
                 off = hand_idx * HAND_PARAM_DIM
@@ -407,31 +398,12 @@ class HOT3DHandDataset(Dataset):
 
                 # --- Step 1: world → camera position ---
                 t_cam = R_cw @ t_world + t_cw
-                t_x, t_y, t_z = t_cam[0], t_cam[1], t_cam[2]
 
-                # --- Step 2: camera → crop-local translation ---
-                # Pinhole projection: camera 3D → pixel
-                u_pixel = t_x * focal_length / t_z + W / 2.0
-                v_pixel = t_y * focal_length / t_z + H / 2.0
+                gt_vec[off]     = float(t_cam[0])
+                gt_vec[off + 1] = float(t_cam[1])
+                gt_vec[off + 2] = float(t_cam[2])
 
-                # Bbox geometry in pixels
-                bbox = frame_bboxes[hand_idx].numpy()  # [4] normalised
-                bbox_cx = (bbox[0] + bbox[2]) / 2.0 * W
-                bbox_cy = (bbox[1] + bbox[3]) / 2.0 * H
-                bbox_w  = (bbox[2] - bbox[0]) * W
-                bbox_h  = (bbox[3] - bbox[1]) * H
-
-                # Inverse of _crop_relative_to_global:
-                #   u_pixel = bbox_cx + tx_crop * bbox_w / 2
-                #   => tx_crop = 2 * (u_pixel - bbox_cx) / bbox_w
-                tx_crop = 2.0 * (u_pixel - bbox_cx) / max(bbox_w, 1e-6)
-                ty_crop = 2.0 * (v_pixel - bbox_cy) / max(bbox_h, 1e-6)
-
-                gt_vec[off]     = float(t_z)
-                gt_vec[off + 1] = float(tx_crop)
-                gt_vec[off + 2] = float(ty_crop)
-
-                # --- Step 3: world → camera orientation (unchanged) ---
+                # --- Step 2: world → camera orientation ---
                 q_xyzw = np.array([q_wxyz[1], q_wxyz[2], q_wxyz[3], q_wxyz[0]])
                 R_world = Rotation.from_quat(q_xyzw).as_matrix()
                 R_cam = R_cw @ R_world
@@ -562,8 +534,14 @@ def run_validation(model, val_loader, num_frames, device, vis_clip_indices=None)
             gt = vbatch["gt"].to(device)
             hb = vbatch["hand_bboxes"].to(device) if "hand_bboxes" in vbatch else None
             hv = vbatch["hand_valid"].to(device)  if "hand_valid"  in vbatch else None
-            preds = model(build_views(imgs, num_frames, device, hb, hv, crop_local_output=True), is_inference=False, use_motion=False)
-            val_loss += F.mse_loss(preds["hand_joints"], gt).item()
+            preds = model(build_views(imgs, num_frames, device, hb, hv), is_inference=False, use_motion=False)
+            if hv is not None:
+                valid_mask = hv.unsqueeze(-1).expand(-1, -1, -1, HAND_PARAM_DIM).reshape(
+                    hv.shape[0], hv.shape[1], -1).float()
+                diff_sq = (preds["hand_joints"] - gt) ** 2
+                val_loss += (diff_sq * valid_mask).sum().item() / valid_mask.sum().clamp(min=1).item()
+            else:
+                val_loss += F.mse_loss(preds["hand_joints"], gt).item()
 
             if vis_clip_indices:
                 # For vis we need camera-space predictions for rendering
@@ -731,6 +709,24 @@ def train():
             config=cfg,
         )
 
+    # --- Diagnostic: first-batch GT translation stats (sanity check the
+    # crop-local / camera-frame transform after the fisheye fix). ---
+    _diag_batch = next(iter(train_loader))
+    _diag_gt = _diag_batch["gt"]  # [B, S, 64]
+    for _hand_idx, _name in enumerate(("left", "right")):
+        _off = _hand_idx * HAND_PARAM_DIM
+        _t = _diag_gt[..., _off:_off + 3]
+        _nz = _t.abs().sum(dim=-1) > 1e-6
+        if _nz.any():
+            _tv = _t[_nz]
+            print(f"[DIAG] {_name} hand GT t_cam: "
+                  f"min={_tv.min().item():.4f} max={_tv.max().item():.4f} "
+                  f"mean={_tv.mean().item():.4f} std={_tv.std().item():.4f} "
+                  f"(N={_nz.sum().item()})")
+        else:
+            print(f"[DIAG] {_name} hand GT t_cam: all-zero in first batch")
+    del _diag_batch, _diag_gt
+
     best_val_loss = float("inf")
     global_step = 0
 
@@ -744,8 +740,14 @@ def train():
             gt = batch["gt"].to(device)
             hb = batch["hand_bboxes"].to(device) if "hand_bboxes" in batch else None
             hv = batch["hand_valid"].to(device)  if "hand_valid"  in batch else None
-            preds = model(build_views(imgs, num_frames, device, hb, hv, crop_local_output=True), is_inference=False, use_motion=False)
-            loss = F.mse_loss(preds["hand_joints"], gt)
+            preds = model(build_views(imgs, num_frames, device, hb, hv), is_inference=False, use_motion=False)
+            if hv is not None:
+                valid_mask = hv.unsqueeze(-1).expand(-1, -1, -1, HAND_PARAM_DIM).reshape(
+                    hv.shape[0], hv.shape[1], -1).float()
+                diff_sq = (preds["hand_joints"] - gt) ** 2
+                loss = (diff_sq * valid_mask).sum() / valid_mask.sum().clamp(min=1)
+            else:
+                loss = F.mse_loss(preds["hand_joints"], gt)
             (loss / grad_accum_steps).backward()
 
             if (batch_idx + 1) % grad_accum_steps == 0:
