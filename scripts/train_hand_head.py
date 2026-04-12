@@ -769,6 +769,7 @@ def train():
             accum_loss += loss.item()
 
             if (batch_idx + 1) % grad_accum_steps == 0:
+                grad_norm = torch.nn.utils.clip_grad_norm_(hand_params, max_norm=float("inf"))
                 optimizer.step()
                 optimizer.zero_grad()
                 avg_loss = accum_loss / grad_accum_steps
@@ -777,11 +778,12 @@ def train():
 
                 # --- Train logging ---
                 if use_wandb:
-                    wandb.log({"train/loss": avg_loss, "lr": scheduler.get_last_lr()[0]}, step=global_step)
+                    wandb.log({"train/loss": avg_loss, "train/grad_norm": grad_norm.item(),
+                               "lr": scheduler.get_last_lr()[0]}, step=global_step)
 
                 if global_step % log_every == 0 or global_step == 1:
                     lr = scheduler.get_last_lr()[0]
-                    tqdm.write(f"  step {global_step} | train_loss={avg_loss:.6f} | lr={lr:.2e}")
+                    tqdm.write(f"  step {global_step} | train_loss={avg_loss:.6f} | grad_norm={grad_norm.item():.4f} | lr={lr:.2e}")
                     if use_wandb and train_vis_items:
                         train_images = render_train_vis(model, train_vis_items, num_frames, device, render_fn)
                         if train_images:
