@@ -40,6 +40,16 @@ model:
   enable_motion: false
   enable_gs: false
 
+  # HaMeR head architecture (only used when hand_head_type == "hamer")
+  hamer_head_kwargs:
+    dim: 1024
+    depth: 6
+    heads: 8
+    dim_head: 64
+    mlp_dim: 1024
+    dropout: 0.0
+    crop_global_depth: 1
+
 # ------------------------------------------------------------------
 # Training
 # ------------------------------------------------------------------

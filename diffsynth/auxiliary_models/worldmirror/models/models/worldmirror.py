@@ -61,6 +61,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         self.hand_head_type = kwargs.get("hand_head_type", "hamer")
         self.use_hand_crop = kwargs.get("use_hand_crop", False)
         self.hand_crop_size = kwargs.get("hand_crop_size", 8)
+        self.hamer_head_kwargs = kwargs.get("hamer_head_kwargs", {})
 
         self.life_span_gamma = life_span_gamma
         self.dynamic_threshold = dynamic_threshold
@@ -212,6 +213,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
                     use_crop=self.use_hand_crop,
                     crop_size=self.hand_crop_size,
                     patch_size=patch_size,
+                    **self.hamer_head_kwargs,
                 )
             elif self.hand_head_type == "dpt":
                 self.hand_head = DPTHead(
