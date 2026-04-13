@@ -1,0 +1,50 @@
+height: 336
+width: 560
+num_views: 81
+min_num_context_views: 11
+max_num_context_views: 21
+seed: 0
+
+train_dataset: SpatialVID(split=None, ROOT="data/SpatialVID", max_interval=5, height=${height}, width=${width}, num_views=${num_views}, min_num_context_views=${min_num_context_views}, max_num_context_views=${max_num_context_views}, seed=${seed})
+
+model_path: ./models
+reconstructor_path: ./models/NeoVerse/reconstructor.ckpt
+pipeline_kwargs:
+  novel_view_sampling_trans: [0.01, 0.1]
+  novel_view_sampling_max_rot: 0.0
+  culling_prob: 0.3
+  kernel_size_range: [11, 51]
+  occlusion_thresh: 0.1
+  alpha_thresh: 0.5
+  color_thresh: [50, 100]
+  prompt_drop_prob: 0.1
+  mask_drop_prob: 0.2
+  condition_drop_prob: 0.05
+
+trainable_models: control_branch.*
+lora_base_model: null
+lora_target_modules: "q,k,v,o,ffn.0,ffn.2"
+lora_exclude_modules: null
+lora_rank: 32
+learning_rate: 1e-5
+num_epochs: 1
+batch_size: 1
+num_workers: 1
+pin_memory: false
+output_path: ./models/train/NeoVerse
+remove_prefix_in_ckpt: pipe.
+
+use_gradient_checkpointing: true
+use_gradient_checkpointing_offload: false
+gradient_accumulation_steps: 1
+max_timestep_boundary: 1.0
+min_timestep_boundary: 0.0
+
+
+print_freq: 5
+save_freq: 0.05
+clip_grad: 1.0
+resume: null
+start_epoch: 0
+resume_step: null
+pretrained_path: null

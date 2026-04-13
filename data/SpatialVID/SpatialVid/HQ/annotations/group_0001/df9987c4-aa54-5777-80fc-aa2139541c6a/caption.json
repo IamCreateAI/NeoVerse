@@ -1,0 +1,19 @@
+{
+    "SceneSummary": "A bustling urban street lined with shops, palm trees, and parked vehicles, under a clear blue sky, exudes a lively, everyday atmosphere.",
+    "SceneDescription": "The scene depicts a vibrant street in a town, lined with parked cars and pedestrians. People are walking along the sidewalk, some carrying bags. A white GMC truck is parked prominently on the right side of the frame. Buildings with shops and apartments form the backdrop, with palm trees adding a touch of California. The sky is a clear blue, casting a natural light on the scene. The overall atmosphere is lively and urban, with a sense of everyday activity.",
+    "CameraMotion": "The camera steadily moves forward along the sidewalk, gliding past parked cars and pedestrians. Its path is smooth and consistent, with no significant lateral or vertical shifts. The forward translate remains steady throughout, capturing the dynamic street scene in a continuous, unbroken motion.",
+    "ShotImmersion": "The camera glides forward along the sidewalk, revealing a vibrant town scene. Parked cars and pedestrians pass by as the clear blue sky casts a natural glow over the bustling streets, capturing the rhythm of daily life in a smooth, continuous motion.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Urban",
+            "second": "Street Scene"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime",
+        "weather": "Sunny",
+        "crowdDensity": "Moderate"
+    },
+    "MotionTrends": [
+        "forward translate"
+    ]
+}

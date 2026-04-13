@@ -1,0 +1,19 @@
+{
+    "SceneSummary": "A peaceful park with a winding dirt path, shaded by tall trees, leading toward a light-colored roofed building amidst lush greenery, evoking calm and natural beauty.",
+    "SceneDescription": "A serene park scene unfolds with a dirt path winding through lush greenery. Trees line the path, casting shadows on the ground. The grass is vibrant and well-maintained. In the distance, a building with a light-colored roof adds a touch of civilization to the natural setting. The scene is peaceful and inviting, suggesting a tranquil environment for a leisurely walk or quiet contemplation. The overall tone is calm and refreshing, evoking a sense of natural beauty and tranquility.",
+    "CameraMotion": "The camera steadily moves forward along a dirt path, gliding smoothly through the park. Its position shifts consistently in the z-direction, with minimal lateral or vertical adjustments. The motion is fluid and uninterrupted, capturing the gradual reveal of the tree-lined trail and distant building.",
+    "ShotImmersion": "The camera glides forward along a quiet dirt path, flanked by towering trees whose shadows stretch across the grass. As it moves, the serene landscape unfolds\u2014vibrant greenery, soft light filtering through leaves, and a distant building emerging in the distance, all captured in a smooth, continuous motion that invites quiet reflection.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Park"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime",
+        "weather": "Sunny",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate"
+    ]
+}

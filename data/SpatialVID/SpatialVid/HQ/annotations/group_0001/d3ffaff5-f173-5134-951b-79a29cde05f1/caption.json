@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A sunlit mountain road flanked by a stone wall and steep grassy slope leads toward distant peaks, evoking a serene, natural journey through a remote alpine setting.",
+    "SceneDescription": "A dirt road winds along a steep mountainside under a clear blue sky. To the left, a sturdy stone wall supports the road, while the right side slopes sharply down, covered in dry grass. Distant, rugged mountains form a scenic backdrop. The lighting is bright and sunny, creating a warm, natural atmosphere. The scene evokes a sense of remote, mountainous terrain and the feeling of traveling along a challenging path. The overall tone is peaceful and serene, highlighting the natural beauty of the landscape.",
+    "CameraMotion": "The camera glides steadily forward along a winding path, with the terrain shifting beneath it. The left side remains stable as the right drops away, creating a sense of movement through a rugged landscape. The motion is smooth and consistent, with no abrupt changes in direction or speed.",
+    "ShotImmersion": "The camera moves smoothly forward along a dusty mountain path, with a sturdy stone wall on one side and a steep, grassy slope on the other. Distant peaks rise against a clear blue sky, casting long shadows over the rugged terrain. The steady motion conveys a quiet, immersive journey through a peaceful, wild landscape.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Mountain Trail"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime (Midday/Noon/Afternoon)",
+        "weather": "Sunny",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "leftward drift",
+        "upward tilt"
+    ]
+}

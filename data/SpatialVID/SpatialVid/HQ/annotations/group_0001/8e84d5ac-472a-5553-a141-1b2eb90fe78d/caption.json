@@ -1,0 +1,20 @@
+{
+    "SceneSummary": "A serene train ride through dense forests and rugged mountains, with soft light casting long shadows across the landscape, evoking a quiet, remote wilderness experience.",
+    "SceneDescription": "The scene depicts a train journey through a mountainous, forested landscape. The railway tracks stretch ahead, flanked by dense woods and rocky terrain. Patches of cleared land reveal felled trees, contrasting with the towering evergreens. In the distance, a snow-capped mountain rises against a pale sky, suggesting either early morning or late afternoon. The overall atmosphere is serene and somewhat remote, conveying a sense of traveling through a sparsely populated, natural environment. The lighting is soft, casting long shadows and creating a tranquil mood.",
+    "CameraMotion": "The camera steadily moves forward along the tracks, with a smooth and consistent translation. Slight lateral shifts suggest minor track curvature, while the vertical position remains stable, maintaining a steady, forward-facing perspective throughout the journey.",
+    "ShotImmersion": "The camera glides forward along the railway, sweeping past towering evergreens and rocky outcrops. The world blurs in gentle motion, revealing distant peaks and open clearings, as the train weaves through a tranquil, untouched wilderness under a pale sky.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Mountain Train Journey"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Dawn/Evening",
+        "weather": "Cloudy",
+        "crowdDensity": "Sparse"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "slight left drift"
+    ]
+}

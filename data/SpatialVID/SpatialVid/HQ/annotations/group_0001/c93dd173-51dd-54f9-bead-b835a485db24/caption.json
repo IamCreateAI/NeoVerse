@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A serene train journey unfolds through a lush, natural landscape, with a river and forested hills framing the track under golden-hour light.",
+    "SceneDescription": "The scene depicts a train journey through a scenic landscape. The railway track stretches ahead, flanked on one side by a steep, forested hillside and on the other by a body of water, possibly a river or lake. The lighting suggests either early morning or late afternoon, with a warm, golden hue in the sky. The atmosphere is tranquil and serene, evoking a sense of peaceful travel through nature. The overall tone is calm and inviting, showcasing the beauty of the surrounding environment.",
+    "CameraMotion": "The camera steadily moves forward along a straight path, with a smooth and consistent translation. The x-coordinate increases gradually, indicating a steady rightward shift, while the y-coordinate decreases slightly, suggesting a subtle downward tilt. The z-coordinate shows a continuous forward motion, reflecting the train's progression through the landscape.",
+    "ShotImmersion": "The camera glides forward, revealing a tranquil world beyond the window\u2014rolling hills, a glistening river, and the soft glow of sunset. The train\u2019s steady motion carries the viewer through a peaceful, scenic passage, where nature and travel merge in quiet harmony.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Scenic Train Journey"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Dawn",
+        "weather": "Sunny",
+        "crowdDensity": "Unknown"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "right translate",
+        "downward drift"
+    ]
+}

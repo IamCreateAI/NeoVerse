@@ -1,0 +1,20 @@
+{
+    "SceneSummary": "A serene tropical landscape features a sunlit beach, a grassy hill, and a calm bay, bathed in bright daylight, evoking a peaceful, idyllic setting.",
+    "SceneDescription": "The video showcases a tropical paradise. Initially, a blue boat floats on crystal-clear turquoise water, revealing the seabed below. A white sandy beach and lush green vegetation line the shore. The scene then shifts to an aerial view of a green, grassy hill leading down to a bay. The landscape is bathed in bright light, suggesting daytime, creating a serene and picturesque atmosphere. The overall tone is peaceful and inviting.",
+    "CameraMotion": "The camera steadily translates forward, with a gradual shift to the left as it moves through the scene. The motion is smooth and consistent, capturing the transition from the boat to the hillside, maintaining a steady pace throughout.",
+    "ShotImmersion": "The camera glides forward across the water, then shifts left as it ascends over the hill, revealing a vast, sun-drenched landscape. The view unfolds with tranquil beauty, capturing the gentle flow of nature and the quiet majesty of the shore.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Tropical Beach"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime",
+        "weather": "Sunny",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "left translate"
+    ]
+}

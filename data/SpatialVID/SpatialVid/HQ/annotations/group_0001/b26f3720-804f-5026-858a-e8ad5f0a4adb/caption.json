@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A quiet, winding mountain road flanked by towering evergreens, under an overcast sky, leading toward a misty peak in a serene, isolated natural setting.",
+    "SceneDescription": "A winding paved road cuts through a dense, mountainous forest. Towering evergreen trees line both sides of the road, creating a tunnel-like effect. A rocky embankment supports the forest on one side. The sky is overcast, casting a soft, diffused light over the scene. The atmosphere is tranquil and serene, with a sense of isolation and natural beauty. The road ascends gradually, leading towards a distant mountain peak partially obscured by clouds. The overall tone is peaceful and contemplative.",
+    "CameraMotion": "The camera glides steadily forward, its path gradually shifting left as it ascends a winding road. The movement is smooth and consistent, with a slight lateral drift to the left, maintaining a broad, open view of the forested landscape. The forward motion intensifies slightly as the terrain rises, revealing distant mountain peaks through the dense canopy.",
+    "ShotImmersion": "The camera moves smoothly forward along a narrow road, flanked by towering evergreens that frame the path like a living tunnel. As it ascends, the forest thins slightly, revealing a distant mountain peak shrouded in clouds. The soft light and steady motion create a calm, contemplative journey through the wilderness.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Mountain Trail"
+        },
+        "brightness": "Dim/Dark",
+        "timeOfDay": "Unknown",
+        "weather": "Cloudy",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "left translate",
+        "upward drift"
+    ]
+}

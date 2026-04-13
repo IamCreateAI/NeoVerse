@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A serene stone staircase winds through a lush forest, with people ascending under a soft, cool light that enhances the tranquil, natural ambiance.",
+    "SceneDescription": "A stone staircase winds uphill through a dense, verdant forest. Two pairs of people are ascending the stairs. The first pair, a young man and woman, walk closely together under an umbrella. Further behind them, two men follow. The scene is bathed in a cool, muted light, creating a tranquil and somewhat ethereal atmosphere. The dense foliage on either side of the staircase adds to the sense of seclusion and natural beauty. The overall tone is peaceful and contemplative, suggesting a leisurely walk in nature.",
+    "CameraMotion": "The camera steadily moves forward along the staircase, maintaining a centered view of the path and figures. Slight lateral shifts suggest minor adjustments to keep the scene framed, while the steady upward motion reflects the incline. The movement is smooth and consistent, with no abrupt changes.",
+    "ShotImmersion": "The camera glides forward along the winding stone steps, capturing the quiet ascent through the dense greenery. Figures move ahead, their silhouettes framed by the dappled light filtering through the trees. The steady motion blends with the natural rhythm of the climb, evoking a sense of calm and immersion in the landscape.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Forest Path"
+        },
+        "brightness": "Dim/Dark",
+        "timeOfDay": "Unknown",
+        "weather": "Cloudy",
+        "crowdDensity": "Sparse"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "left translate",
+        "upward drift"
+    ]
+}

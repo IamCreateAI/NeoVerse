@@ -1,0 +1,20 @@
+{
+    "SceneSummary": "A somber graveyard with scattered headstones, a grassy path, and trees creates an eerie, reflective atmosphere under soft, diffused light.",
+    "SceneDescription": "The scene depicts a graveyard with numerous headstones scattered across a grassy landscape. A path forks into two, leading deeper into the graveyard. Trees with varying foliage surround the area, some bare and others with vibrant green leaves. The lighting is soft and diffused, creating a somewhat eerie and melancholic atmosphere. The overall tone is somber and reflective, evoking a sense of peace and remembrance. A bench sits to the right of the path, inviting contemplation.",
+    "CameraMotion": "The camera steadily moves forward along a path, with a subtle leftward drift as it progresses. The motion is smooth and continuous, maintaining a consistent pace through the graveyard's winding trail.",
+    "ShotImmersion": "The camera glides forward along a winding path, flanked by weathered headstones and towering trees. A gentle leftward shift guides the view deeper into the graveyard, where the soft light casts long shadows over the quiet, contemplative landscape.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Rural",
+            "second": "Graveyard"
+        },
+        "brightness": "Dim/Dark",
+        "timeOfDay": "Unknown",
+        "weather": "Cloudy",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "left translate"
+    ]
+}

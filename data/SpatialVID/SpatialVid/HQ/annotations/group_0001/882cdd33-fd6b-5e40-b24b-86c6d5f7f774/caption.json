@@ -1,0 +1,20 @@
+{
+    "SceneSummary": "A surreal, vibrant Japanese street scene features masked pedestrians, brick sidewalks, and elevated roads, bathed in an otherworldly color palette that enhances its dreamlike, bustling atmosphere.",
+    "SceneDescription": "A vibrant, stylized street scene in Japan unfolds with pedestrians walking along a brick sidewalk. The color palette is altered, giving the scene a surreal, almost dreamlike quality. People are walking in the same direction as the camera, some wearing masks. Bicycles are parked along the side. Buildings and signs line the street, with an elevated roadway visible in the background. The overall atmosphere is busy and urban, with a slightly otherworldly feel due to the altered colors.",
+    "CameraMotion": "The camera steadily moves forward along the sidewalk, tracking pedestrians with a smooth, consistent motion. Slight lateral shifts suggest minor adjustments to keep the scene framed, but the primary direction remains forward, maintaining a steady pace through the urban environment.",
+    "ShotImmersion": "The camera glides forward through a dreamlike Tokyo street, following masked pedestrians as they walk past brick pathways and towering buildings. The surreal colors and rhythmic movement create a sense of quiet urgency, capturing the essence of a bustling, otherworldly urban landscape.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Urban",
+            "second": "Street Scene"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime (Midday/Noon/Afternoon)",
+        "weather": "Sunny",
+        "crowdDensity": "Moderate"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "slight lateral shift"
+    ]
+}

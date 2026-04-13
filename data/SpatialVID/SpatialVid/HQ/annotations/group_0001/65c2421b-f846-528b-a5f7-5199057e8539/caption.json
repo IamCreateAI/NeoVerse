@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A serene forest trail under a blue sky, surrounded by tall trees and lush greenery, evoking a tranquil atmosphere.",
+    "SceneDescription": "The scene depicts a forest trail with a dirt path leading forward. The sky is a clear blue. Tall trees line both sides of the path, with dense green vegetation covering the ground. The lighting is bright. The overall tone is peaceful and serene, inviting the viewer to explore the natural environment. The scene conveys a sense of tranquility and immersion in nature.",
+    "CameraMotion": "The camera steadily moves forward along a dirt path, with slight lateral shifts and minor vertical adjustments. Its trajectory shows a consistent, smooth dolly motion, maintaining a low angle as it progresses through the forest.",
+    "ShotImmersion": "The camera glides forward along a winding dirt path, flanked by towering trees and dense foliage. The bright light illuminates the scene, while subtle shifts in direction and elevation add a sense of organic movement through the peaceful landscape.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Forest Trail"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime",
+        "weather": "Sunny",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "slight left drift",
+        "minor vertical movement"
+    ]
+}

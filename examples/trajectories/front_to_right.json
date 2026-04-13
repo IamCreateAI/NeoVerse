@@ -1,0 +1,24 @@
+{
+  "name": "front_to_right",
+  "description": "Front view to right view used in single-view to multi-view demo",
+  "mode": "relative",
+  "num_frames": 81,
+  "zoom_ratio": 1.0,
+  "use_first_frame": false,
+  "keyframes": [
+    {
+      "0": [
+        {
+          "pan_right": {"angle": 25}
+        }
+      ]
+    },
+    {
+      "80": [
+        {
+          "static": {}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+    "SceneSummary": "A vibrant elevated walkway weaves through a cityscape, lined with greenery and modern buildings, bathed in warm golden light that enhances its lively atmosphere.",
+    "SceneDescription": "The scene depicts a bustling elevated walkway in an urban setting, likely a repurposed railway line. People stroll along the path, some walking in the same direction as the camera, others sitting on benches. Lush greenery grows along the sides of the walkway, contrasting with the surrounding cityscape. Buildings of varying heights flank the path, including a modern glass-fronted structure with advertisements. The lighting suggests either sunrise or sunset, casting a warm, golden hue over the scene, creating a vibrant and lively atmosphere.",
+    "CameraMotion": "The camera steadily moves forward along the elevated walkway, with a smooth rightward drift that keeps the path and pedestrians in frame. The motion is consistent and fluid, reflecting a natural progression through the urban space.",
+    "ShotImmersion": "The camera glides forward along the bustling elevated walkway, its steady movement capturing the flow of people and the lush greenery beside them. Golden light casts long shadows, illuminating the modern architecture and the lively energy of the scene.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Urban",
+            "second": "Elevated Walkway"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Dawn",
+        "weather": "Sunny",
+        "crowdDensity": "Moderate"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "right translate"
+    ]
+}

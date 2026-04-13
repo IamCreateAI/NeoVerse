@@ -1,0 +1,21 @@
+{
+  "0->1": [
+    "Stay"
+  ],
+  "1->2": [
+    "Pan Left"
+  ],
+  "2->19": [
+    "Dolly In",
+    "Pan Left"
+  ],
+  "19->25": [
+    "Dolly In",
+    "Truck Left",
+    "Pan Left"
+  ],
+  "25->40": [
+    "Dolly In",
+    "Truck Left"
+  ]
+}

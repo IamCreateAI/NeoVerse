@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A lively winter night on a stone-paved pedestrian street, lined with glowing shops and bustling with people wrapped in warm clothing under a dark sky.",
+    "SceneDescription": "The scene depicts a bustling pedestrian street at night. People of all ages are walking in both directions, bundled up in winter clothing. Shops line both sides of the street, illuminated by streetlights and storefront displays. The ground is paved with stone, and there are patches of snow near the edges of the walkway. The atmosphere is lively and urban, with a sense of activity and movement. The overall tone is cold but inviting, with the warm lights creating a contrast against the dark sky.",
+    "CameraMotion": "The camera steadily moves forward, maintaining a low angle as it glides along the street. Slight lateral shifts keep the scene centered, with smooth, continuous motion that mirrors the flow of pedestrians.",
+    "ShotImmersion": "The camera glides forward through the snowy streets, capturing the glow of shopfronts and the movement of bundled figures. A low angle frames the scene, with subtle shifts keeping the action in focus as the urban night pulses with life.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Urban",
+            "second": "Street Scene"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Night",
+        "weather": "Snowy",
+        "crowdDensity": "Crowded"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "left translate",
+        "downward tilt"
+    ]
+}

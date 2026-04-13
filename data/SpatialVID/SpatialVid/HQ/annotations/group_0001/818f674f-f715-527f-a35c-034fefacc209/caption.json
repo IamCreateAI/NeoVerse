@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A quiet, misty forest path leads to a weathered Japanese shrine, surrounded by moss-covered stones and ancient statues under dim, ethereal light.",
+    "SceneDescription": "A stone pathway ascends through a dense, eerie forest towards a small, traditional Japanese building. The path is flanked by moss-covered stone walls and weathered statues. The lighting is dim and muted, casting a cool, almost otherworldly tone over the scene. The atmosphere is quiet and still, evoking a sense of mystery and reverence. The building at the top of the path appears to be a small shrine or temple, suggesting a place of spiritual significance.",
+    "CameraMotion": "The camera glides steadily forward along a winding stone path, its position shifting smoothly as it moves deeper into the forest. The trajectory shows a consistent forward motion with slight lateral shifts, suggesting a natural, grounded movement rather than a rigid dolly. There is no significant upward or downward tilt, maintaining a low, immersive perspective throughout.",
+    "ShotImmersion": "The camera advances through a narrow stone path, flanked by towering moss-covered walls and silent statues. Dim light filters through the trees, casting long shadows as the lens moves steadily forward, drawing the viewer toward the mysterious, weathered shrine at the path's end.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Forest Path"
+        },
+        "brightness": "Dim",
+        "timeOfDay": "Unknown",
+        "weather": "Cloudy",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "left translate",
+        "right translate"
+    ]
+}

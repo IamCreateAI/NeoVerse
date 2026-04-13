@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A snow-covered mountain road stretches through a serene, overcast landscape, framed by towering rock formations and lined with snow-dusted trees under soft, diffused light.",
+    "SceneDescription": "A paved road winds through a mountainous landscape covered in snow. The sky is overcast, casting a soft, diffused light over the scene. The road is wet, reflecting the sky and the surrounding environment. Trees and shrubs line the sides of the road, their branches dusted with snow. In the distance, towering rock formations rise majestically, creating a sense of grandeur and isolation. The overall tone is serene and peaceful, evoking a sense of quiet beauty in the winter landscape.",
+    "CameraMotion": "The camera steadily moves forward along a winding path, with a smooth, consistent translation. Slight lateral shifts keep the road centered, while the gradual increase in z-values reflects a steady approach toward the distant mountains.",
+    "ShotImmersion": "The camera glides forward along a winding, snow-laden road, its path curving gently to the right. The frame captures the vast, silent expanse of the mountains, their jagged peaks rising against the muted sky as the road stretches into the distance, reflecting the quiet majesty of the frozen wilderness.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Snowy Mountain Road"
+        },
+        "brightness": "Dim/Dark",
+        "timeOfDay": "Unknown",
+        "weather": "Snowy",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "rightward curve",
+        "upward drift"
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "SceneSummary": "A serene Japanese urban street under surreal, color-shifted lighting, lined with buildings and bustling with quiet pedestrian and bicycle activity.",
+    "SceneDescription": "The scene depicts a quiet urban street in Japan, bathed in an unusual, almost otherworldly light. Buildings line the street, and a mix of pedestrians and cyclists move along the sidewalk and crosswalk. A truck and car are parked on the street. The atmosphere is calm and slightly surreal due to the color-shifted lighting, creating a sense of detachment from reality. The overall tone is peaceful, despite the urban setting.",
+    "CameraMotion": "The camera steadily moves forward along the sidewalk, with a smooth rightward drift that tracks the flow of pedestrians and cyclists. The motion is consistent and fluid, maintaining a steady pace throughout the shot.",
+    "ShotImmersion": "The camera glides forward along a quiet Tokyo street, its smooth movement revealing a world bathed in strange, dreamlike light. Pedestrians and cyclists pass by as the lens gently shifts right, capturing the calm rhythm of daily life in an otherworldly setting.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Urban",
+            "second": "Street Scene"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime (Midday/Noon/Afternoon)",
+        "weather": "Unknown",
+        "crowdDensity": "Sparse"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "right translate"
+    ]
+}

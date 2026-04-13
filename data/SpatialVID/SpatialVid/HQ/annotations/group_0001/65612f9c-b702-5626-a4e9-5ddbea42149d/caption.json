@@ -1,0 +1,19 @@
+{
+    "SceneSummary": "A narrow, rain-soaked street at night, lined with parked cars and dimly lit buildings, exudes a quiet, melancholic atmosphere under the relentless downpour.",
+    "SceneDescription": "A nighttime street scene unfolds under a torrential downpour, where the heavy rain transforms the road into a reflective surface. Parked cars line one side of the narrow street, while fences and houses stand on the other. Streetlights cast a diffused glow through the rain, creating a somber and slightly eerie atmosphere. The overall impression is one of quiet solitude amidst the relentless rain, the ambiance heavy with moisture and darkness.",
+    "CameraMotion": "The camera steadily moves forward along the wet street, maintaining a smooth and consistent trajectory. It glides through the rain-slicked pavement, gradually advancing deeper into the scene with a steady, deliberate pace.",
+    "ShotImmersion": "The camera glides forward through the rain-lashed street, its path illuminated by the soft glow of distant streetlights. The reflective road mirrors the dark sky, and the silence is broken only by the rhythmic patter of rain, creating a mood of quiet desolation.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Urban",
+            "second": "Street Scene"
+        },
+        "brightness": "Dim/Dark",
+        "timeOfDay": "Night",
+        "weather": "Rainy",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate"
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "SceneSummary": "A serene forest path winds through dense greenery under golden-hour light, leading toward a weathered bridge over a quiet stream.",
+    "SceneDescription": "A winding road cuts through a dense forest landscape, bathed in the soft light of either early morning or late afternoon. The road surface is cracked and worn. A cyclist pedals slowly along the road, approaching a small bridge. A car is parked on the other side of the bridge. The overall atmosphere is tranquil and serene, with the lush greenery of the forest contrasting against the gray of the road.",
+    "CameraMotion": "The camera steadily moves forward along a winding road, gliding smoothly through the forest. It shifts slightly to the right as the path curves, maintaining a consistent pace. The motion is fluid and continuous, with no abrupt changes in direction or speed.",
+    "ShotImmersion": "The camera glides forward along a cracked road, flanked by towering trees. As the path bends gently to the right, the forest recedes, revealing a wooden bridge ahead. The soft light bathes the scene in warmth, capturing the quiet beauty of nature in motion.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Rural",
+            "second": "Forest Road"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Dawn/Morning",
+        "weather": "Cloudy",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "right translate"
+    ]
+}

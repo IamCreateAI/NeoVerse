@@ -1,0 +1,20 @@
+{
+    "SceneSummary": "A desolate canyon stretches under a blue sky, its jagged walls and pale hues evoking an eerie, otherworldly atmosphere of isolation and ancient erosion.",
+    "SceneDescription": "The scene depicts a desolate, otherworldly landscape resembling a canyon. The ground is rocky and uneven, with pale yellow and brown hues dominating the terrain. The canyon walls are steep and textured, suggesting erosion over time. In the distance, dark mountains rise against a blue sky. The lighting is bright, casting shadows and emphasizing the barrenness of the environment. The overall tone is one of isolation and desolation.",
+    "CameraMotion": "The camera steadily moves forward, gliding along the rocky terrain with a smooth, consistent motion. It maintains a low angle, tracking the canyon's narrowing path as it progresses deeper into the landscape.",
+    "ShotImmersion": "The camera glides forward through the narrow, rocky chasm, its low angle capturing the textured walls. The light casts shadows across the ground, emphasizing the vast emptiness.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Natural Landscape",
+            "second": "Canyon"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime",
+        "weather": "Sunny",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "steady motion"
+    ]
+}

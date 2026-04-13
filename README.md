@@ -23,6 +23,7 @@ https://github.com/user-attachments/assets/4c957bd7-64e1-4a7e-9993-136740d911fe
 
 ## Updates
 
+- **[2026-04-14]** Release training scripts and reproducible demo notebooks.
 - **[2026-04-09]** NeoVerse has been selected as a **highlight** paper!
 - **[2026-02-21]** NeoVerse has been accepted by **CVPR 2026**!
 - **[2026-02-16]** Release inference scripts and model checkpoints in both [Hugging Face](https://huggingface.co/Yuppie1204/NeoVerse) and [ModelScope](https://www.modelscope.cn/models/Yuppie1204/NeoVerse).
@@ -35,6 +36,8 @@ https://github.com/user-attachments/assets/4c957bd7-64e1-4a7e-9993-136740d911fe
 - **Interactive Gradio Demo** — Step-by-step web UI for reconstruction, trajectory design, and generation
 - **Multiple Reconstructors** — Supports different 3D reconstructors (e.g., [Depth Anything 3](https://depth-anything-3.github.io/)) via a plug-and-play interface
 - **Fast Inference** — Inference pipeline completes in under 30 seconds with distilled LoRA acceleration on a single A800.
+- **Training** — Training code released; fine-tune the NeoVerseControlBranch on your own data with multi-node ZeRO-2.
+- **Demo Notebooks** — Reproducible Jupyter notebooks in `docs/` covering downstream applications shown on the project page.
 
 ## Installation
 
@@ -238,6 +241,45 @@ python inference.py \
 # Gradio demo with Depth Anything 3
 python app.py --reconstructor_path models/da3_giant_1.1.safetensors
 ```
+
+## Demo Notebooks (More Coming Soon)
+
+We provide reproducible Jupyter notebooks in [`docs/`](docs/) that cover the downstream applications demonstrated on the [project page](https://neoverse-4d.github.io):
+
+| Notebook | Description |
+|----------|-------------|
+| [`docs/single_view_to_multi_view.ipynb`](docs/single_view_to_multi_view.ipynb) | Progressively expand a single-view video into a multi-view sequence via sequential camera panning |
+| [`docs/video_editing.ipynb`](docs/video_editing.ipynb) | Edit a masked region in a video guided by a text prompt while preserving the surrounding scene |
+| [`docs/camera_stabilization.ipynb`](docs/camera_stabilization.ipynb) | Stabilize shaky camera footage by smoothing the recovered trajectory with SLERP and Gaussian filtering |
+
+**Note:** For counterfactual generation, we recommend using a more professional video editing model like [VACE](https://github.com/ali-vilab/VACE) to perform the editing on a single-view video first, and then feed the edited video into NeoVerse to generate multi-view data or other novel views you need like the tutorial in [`docs/single_view_to_multi_view.ipynb`](docs/single_view_to_multi_view.ipynb).
+
+## Training
+
+We release the training code for fine-tuning NeoVerse's control branch on your own data.
+
+### Training Data
+
+We provide 20 sample clips from [SpatialVID](https://huggingface.co/datasets/FelixYuan/SpatialVID-HQ) in `data/SpatialVID/` as a minimal example to get started. During training, **only the RGB video frames and text prompts are required** — depth maps, camera extrinsics, and intrinsics are not used. The 3D structure and camera poses are estimated on-the-fly by the reconstructor. This means you can easily adapt the training pipeline to any in-the-wild monocular video dataset without any 3D annotation.
+
+### Multi-node Training with ZeRO-2
+
+The training script uses [Accelerate](https://huggingface.co/docs/accelerate) with DeepSpeed ZeRO Stage 2. Run it with:
+
+```bash
+accelerate launch \
+    --use_deepspeed \
+    --deepspeed_config_file training/configs/zero_stage2_config.json \
+    --main_process_ip $MASTER_ADDR \
+    --main_process_port $MASTER_PORT \
+    --num_machines $WORLD_SIZE \
+    --num_processes $NUM_PROCESS \
+    --machine_rank $NODE_RANK \
+    --deepspeed_multinode_launcher standard \
+    train.py training/configs/train.yaml
+```
+
+Training configuration (data paths, learning rate, batch size, etc.) is specified in [`training/configs/train.yaml`](training/configs/train.yaml).
 
 ## Model Architecture
 

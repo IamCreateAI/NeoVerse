@@ -1,0 +1,21 @@
+{
+    "SceneSummary": "A serene, charming village of white trulli with conical roofs stretches under a clear blue sky, its cobblestone streets inviting quiet exploration amid soft greenery and timeless charm.",
+    "SceneDescription": "The scene depicts a quaint village street lined with distinctive white buildings featuring conical, stone-tiled roofs. These structures, known as trulli, create a unique architectural landscape. The sky is a clear blue, casting a bright light on the scene. The narrow street, paved with cobblestones, leads deeper into the village, inviting exploration. Potted plants add small touches of greenery. The overall atmosphere is serene and charming, emphasizing the unique beauty of this historic village.",
+    "CameraMotion": "The camera glides steadily forward along a narrow path, its position shifting left as it moves deeper into the village. The y-coordinate rises gradually, indicating a slight downward tilt, while the z-coordinate steadily increases, confirming continuous forward motion. The movement is smooth and consistent, offering a grounded, immersive perspective through the winding cobblestone street.",
+    "ShotImmersion": "The camera glides forward along a cobbled path, flanked by white trulli with cone-shaped roofs. As it moves left, the view dips slightly downward, revealing a beautiful village bathed in bright light. Potted plants add life to the scene, enhancing the tranquil ambiance of this historic setting.",
+    "CategoryTags": {
+        "sceneType": {
+            "first": "Urban",
+            "second": "Street Scene"
+        },
+        "brightness": "Bright",
+        "timeOfDay": "Daytime",
+        "weather": "Sunny",
+        "crowdDensity": "Deserted"
+    },
+    "MotionTrends": [
+        "forward translate",
+        "left translate",
+        "downward drift"
+    ]
+}
