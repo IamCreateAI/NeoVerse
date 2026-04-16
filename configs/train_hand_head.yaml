@@ -12,7 +12,7 @@ data:
   # Step between consecutive clips when sliding over a video (stride=num_frames -> non-overlapping)
   clip_stride: 8
   # Fraction of sequences used for validation (0.0 = no validation; 0.1 = 10% held out)
-  val_split: 0.05
+  val_split: 0.01
   # DataLoader workers for loading video clips
   num_workers: 4
 
@@ -32,6 +32,7 @@ model:
   use_hand_crop: true
   # Crop feature map size (output of ROI Align per hand)
   hand_crop_size: 8
+
   # Disable other heads
   enable_cam: false
   enable_pts: false
@@ -56,14 +57,14 @@ model:
 training:
   lr: 1e-4
   min_lr: 1e-7           # Minimum LR for cosine annealing scheduler
-  epochs: 1
-  batch_size: 1
+  epochs: 5
+  batch_size: 32
   grad_accum_steps: 1    # Effective batch = batch_size * grad_accum_steps
-  log_every: 10          # Steps between train loss logs (console + W&B)
-  val_every: 100         # Steps between validation runs
+  log_every: 500         # Steps between train loss logs (console + W&B)
+  val_every: 500         # Steps between validation runs
   save_every: 1000       # Steps between checkpoint saves
   seed: 42               # Random seed
-  output_dir: "checkpoints/cross_attention"
+  output_dir: "checkpoints/default"
 
 # ------------------------------------------------------------------
 # Visualization
@@ -97,6 +98,6 @@ wandb:
   enabled: true
   project: "hand-head-training"
   entity: 3DV-Project
-  run_name: "Cross Attention"
+  run_name: "Large Batch Size 3 Epcochs"
   tags: []
   notes: null
