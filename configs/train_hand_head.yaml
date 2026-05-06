@@ -41,7 +41,7 @@ model:
   # Phase 2: re-enable GS so the Hand→GS refiner can shift Gaussian centers
   # inside hand bboxes. The rendering path runs but does not yet feed into
   # a loss — consistency loss lands in Phase 3.
-  enable_gs: true
+  enable_gs: false
   # Phase 2: activate the hand↔GS cross-attention refiner head.
   enable_hand_gs_refiner: true
 
@@ -89,8 +89,8 @@ training:
   lr: 1e-4
   min_lr: 1e-7           # Minimum LR for cosine annealing scheduler
   epochs: 1
-  batch_size: 32
-  grad_accum_steps: 1    # Effective batch = batch_size * grad_accum_steps
+  batch_size: 8
+  grad_accum_steps: 3    # Effective batch = batch_size * grad_accum_steps
   log_every: 500         # Steps between train loss logs (console + W&B)
   val_every: 500         # Steps between validation runs
   save_every: 1000       # Steps between checkpoint saves
@@ -118,6 +118,8 @@ visualization:
   mano_model_folder: "models/MANO"
   # Number of sample frames to render as hand overlays (GT vs pred) in W&B
   num_vis_frames: 4
+  # Draw 2D joint dots (GT filled, pred hollow) on top of the mesh overlay
+  draw_joint_dots: false
 
 # ------------------------------------------------------------------
 # Hand Crop (HaMeR-style bbox parameters)
@@ -131,7 +133,7 @@ hand_crop:
 # Debug
 # ------------------------------------------------------------------
 debug:
-  enabled: false          # When true, apply max_sequences limit to limit the number of sequences used for training
+  enabled: true          # When true, apply max_sequences limit to limit the number of sequences used for training
   max_sequences: 5       # Use only this many sequences (from data_root)
   single_frame: false     # Overfit on a single clip from first sequence; disables validation
 

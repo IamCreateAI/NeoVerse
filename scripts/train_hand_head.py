@@ -716,12 +716,13 @@ def build_views(imgs, num_frames, device, hand_bboxes=None, hand_valid=None,
 # Visualization helpers
 # ------------------------------------------------------------------
 
-def setup_vis_items(dataset, num_vis_frames, seq_cache, mano_model, preload=False):
+def setup_vis_items(dataset, num_vis_frames, seq_cache, mano_model, preload=False, draw_joint_dots=True):
     """Set up visualization entries for a dataset.
 
     Args:
         dataset: HOT3DHandDataset
         preload: if True, also load img/gt tensors (for train vis)
+        draw_joint_dots: if False, skip 2D joint dot rendering in render_hand_comparison
 
     Returns:
         List of dicts with 'clip_idx', 'ctx', and optionally 'img'/'gt'.
@@ -742,7 +743,7 @@ def setup_vis_items(dataset, num_vis_frames, seq_cache, mano_model, preload=Fals
 
         entry = {
             "clip_idx": clip_idx,
-            "ctx": {**ctx, "frame_offset": clip["frame_offset"]},
+            "ctx": {**ctx, "frame_offset": clip["frame_offset"], "draw_joint_dots": draw_joint_dots},
         }
         if preload:
             data = dataset[clip_idx]
@@ -1084,6 +1085,7 @@ def train():
 
     # --- Visualization setup ---
     num_vis_frames = vis_cfg.get("num_vis_frames", 4)
+    draw_joint_dots = vis_cfg.get("draw_joint_dots", True)
     render_fn = None
     val_vis_items = []
     train_vis_items = []
@@ -1091,13 +1093,13 @@ def train():
     has_val_clips = val_set is not None and len(val_set.clips) > 0
     if mano_folder and (has_val_clips or len(train_set.clips) > 0):
         from scripts.hand_vis_utils import render_hand_comparison
-        
+
         render_fn = render_hand_comparison
         seq_cache = {}
 
         if has_val_clips:
-            val_vis_items = setup_vis_items(val_set, num_vis_frames, seq_cache, mano_model)
-        train_vis_items = setup_vis_items(train_set, num_vis_frames, seq_cache, mano_model, preload=True)
+            val_vis_items = setup_vis_items(val_set, num_vis_frames, seq_cache, mano_model, draw_joint_dots=draw_joint_dots)
+        train_vis_items = setup_vis_items(train_set, num_vis_frames, seq_cache, mano_model, preload=True, draw_joint_dots=draw_joint_dots)
 
         if val_vis_items or train_vis_items:
             print(f"[VIS] {len(val_vis_items)} val + {len(train_vis_items)} train frames across {len(seq_cache)} sequences")

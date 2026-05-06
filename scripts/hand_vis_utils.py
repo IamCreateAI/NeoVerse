@@ -603,40 +603,41 @@ def render_hand_comparison(vis_context, frame_idx, gt_params, pred_params):
         except Exception as e:
             print(f"[VIS] Pred {'right' if is_right else 'left'} failed: {e}")
 
-    # Draw GT 2D joint dots (filled circles)
-    for is_right, color in [(False, GT_LEFT_COLOR), (True, GT_RIGHT_COLOR)]:
-        hand_key = str(1 if is_right else 0)
-        if hand_key not in hand_data:
-            continue
-        try:
-            joints_np = mano.get_joints(hand_data[hand_key], is_right, return_tensor=False)
-            if joints_np.ndim == 3:
-                joints_np = joints_np[0]  # squeeze batch dim → [J, 3]
-            pix, _, valid = project_vertices(joints_np, T_world_device, T_dev_cam, cam_calib)
-            for j in range(len(joints_np)):
-                if valid[j]:
-                    pt = (int(round(pix[j, 0])), int(round(pix[j, 1])))
-                    cv2.circle(image, pt, 5, color, -1)   # filled dot
-        except Exception as e:
-            print(f"[VIS] GT joints {'right' if is_right else 'left'} failed: {e}")
+    if vis_context.get("draw_joint_dots", True):
+        # Draw GT 2D joint dots (filled circles)
+        for is_right, color in [(False, GT_LEFT_COLOR), (True, GT_RIGHT_COLOR)]:
+            hand_key = str(1 if is_right else 0)
+            if hand_key not in hand_data:
+                continue
+            try:
+                joints_np = mano.get_joints(hand_data[hand_key], is_right, return_tensor=False)
+                if joints_np.ndim == 3:
+                    joints_np = joints_np[0]  # squeeze batch dim → [J, 3]
+                pix, _, valid = project_vertices(joints_np, T_world_device, T_dev_cam, cam_calib)
+                for j in range(len(joints_np)):
+                    if valid[j]:
+                        pt = (int(round(pix[j, 0])), int(round(pix[j, 1])))
+                        cv2.circle(image, pt, 5, color, -1)   # filled dot
+            except Exception as e:
+                print(f"[VIS] GT joints {'right' if is_right else 'left'} failed: {e}")
 
-    # Draw predicted 2D joint dots (hollow circles)
-    for is_right, color in [(False, PRED_LEFT_COLOR), (True, PRED_RIGHT_COLOR)]:
-        offset = 32 if is_right else 0
-        params = pred_params[offset:offset + 32]
-        if params.abs().sum() < 1e-6:
-            continue
-        try:
-            joints_np = mano.get_joints_from_tensor(params, is_right, return_tensor=False)
-            if joints_np.ndim == 3:
-                joints_np = joints_np[0]  # squeeze batch dim → [J, 3]
-            pix, _, valid = project_vertices(joints_np, T_world_device, T_dev_cam, cam_calib)
-            for j in range(len(joints_np)):
-                if valid[j]:
-                    pt = (int(round(pix[j, 0])), int(round(pix[j, 1])))
-                    cv2.circle(image, pt, 5, color, 2)    # hollow circle
-        except Exception as e:
-            print(f"[VIS] Pred joints {'right' if is_right else 'left'} failed: {e}")
+        # Draw predicted 2D joint dots (hollow circles)
+        for is_right, color in [(False, PRED_LEFT_COLOR), (True, PRED_RIGHT_COLOR)]:
+            offset = 32 if is_right else 0
+            params = pred_params[offset:offset + 32]
+            if params.abs().sum() < 1e-6:
+                continue
+            try:
+                joints_np = mano.get_joints_from_tensor(params, is_right, return_tensor=False)
+                if joints_np.ndim == 3:
+                    joints_np = joints_np[0]  # squeeze batch dim → [J, 3]
+                pix, _, valid = project_vertices(joints_np, T_world_device, T_dev_cam, cam_calib)
+                for j in range(len(joints_np)):
+                    if valid[j]:
+                        pt = (int(round(pix[j, 0])), int(round(pix[j, 1])))
+                        cv2.circle(image, pt, 5, color, 2)    # hollow circle
+            except Exception as e:
+                print(f"[VIS] Pred joints {'right' if is_right else 'left'} failed: {e}")
 
     # Add legend
     font = cv2.FONT_HERSHEY_SIMPLEX
