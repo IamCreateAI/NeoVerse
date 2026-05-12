@@ -631,7 +631,7 @@ def render_hand_comparison(vis_context, frame_idx, gt_params, pred_params):
                 joints_np = mano.get_joints_from_tensor(params, is_right, return_tensor=False)
                 if joints_np.ndim == 3:
                     joints_np = joints_np[0]  # squeeze batch dim → [J, 3]
-                pix, _, valid = project_vertices(joints_np, T_world_device, T_dev_cam, cam_calib)
+                pix, _, valid = project_vertices_camera_space(joints_np, cam_calib)
                 for j in range(len(joints_np)):
                     if valid[j]:
                         pt = (int(round(pix[j, 0])), int(round(pix[j, 1])))
