@@ -4,7 +4,7 @@
 data:
   # Root folder containing one subdir per sequence. Each sequence must have
   # video_main_rgb.mp4 and hand_data/mano_hand_pose_trajectory.jsonl
-  data_root: "/home/marian/3dv/data/hot3d_aria/raw_data"
+  data_root: "/work/courses/3dv/team25/data/hot3d_aria/sequences"
   # Number of frames per clip (sliding window over video). Full video is too long to fit in memory.
   num_frames: 16
   # [height, width] to which video frames are resized
@@ -119,7 +119,7 @@ visualization:
   # Number of sample frames to render as hand overlays (GT vs pred) in W&B
   num_vis_frames: 4
   # Draw 2D joint dots (GT filled, pred hollow) on top of the mesh overlay
-  draw_joint_dots: false
+  draw_joint_dots: true
 
 # ------------------------------------------------------------------
 # Hand Crop (HaMeR-style bbox parameters)
@@ -134,7 +134,7 @@ hand_crop:
 # ------------------------------------------------------------------
 debug:
   enabled: true          # When true, apply max_sequences limit to limit the number of sequences used for training
-  max_sequences: 5       # Use only this many sequences (from data_root)
+  max_sequences: 50       # Use only this many sequences (from data_root)
   single_frame: false     # Overfit on a single clip from first sequence; disables validation
 
 # ------------------------------------------------------------------
